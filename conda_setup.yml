@@ -1,0 +1,11 @@
+name: rkt_enabled_flowsheets
+channels: 
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12*
+  - cyipopt
+  - reaktoro
+  - pip:
+      - watertap
+      - git+https://github.com/watertap-org/reaktoro-pse.git

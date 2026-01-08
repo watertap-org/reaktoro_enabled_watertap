@@ -1,1 +1,55 @@
-# reaktoro-pse-flowsheets
+# reaktoro_enabled_watertap
+## 1 Introduction 
+This is a repository for disseminating Reactor-enabled flowsheet units to use in various analyses, as well as supporting a simpler method for building WaterTap flowsheets using pre-configured unit models. 
+
+For reaktoro-pse usage refer to [reaktoro-pse github](https://github.com/watertap-org/reaktoro-pse)
+For reaktoro usage refer to [reaktoro](https://reaktoro.org/index.html)
+
+## 2 Example flowsheets
+a. Reveres osmosis with acid addition and softening as pre-treatment 
+
+This is a standard flowsheet used for demonstrating advanced water chemistry modeling with WaterTAP where reaktoro is used to model:
+
+    a. Precipitation of solids in softening via addition of Lime and soda ash
+
+    b. pH change via addition of acid
+
+    c. Scaling potential in the Reverse Osmosis process.
+
+## 3 Available units
+All unit models are designed to work with MCAS property package, and are available in flowsheet_untis folder. 
+
+These units use the "WaterTAPFlowsheetBlock" for simple connection and management. 
+
+Refer to flowsheet configuration details and tests for example usage. 
+
+
+
+## 4 Installation
+
+#### 4.1 Contributing to the repository:
+
+Setup requires conda or miniforge to install cyipopt and reaktoro. 
+
+a. Install conda or miniforge. 
+
+b. Clone/download this repository and open the command prompt inside the repository folder:
+
+c. Run 
+
+     conda env create -f conda_setup.yml
+
+d. Run tests:
+
+    pytest 
+
+#### 4.2 Using models in and tools in analysis
+
+Install in your working environment inside conda
+
+    conda install cyipopt, reaktoro
+    pip install git+https://github.com/watertap-org/reaktoro-pse.git
+
+Import any of the flowsheet untis or flowsheet into your analysis code useing
+
+    import reaktoro_enabled_watertap
