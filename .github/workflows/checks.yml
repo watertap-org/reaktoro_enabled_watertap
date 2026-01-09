@@ -72,7 +72,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           channels: conda-forge
-          activate-environment: ${{ matrix.install-mode == 'dev' && 'reaktoro_enabled_watertap-dev' || 'reaktoro_enabled_watertap' }}
+          activate-environment: ${{ matrix.install-mode == 'dev' && 'reaktoro-pse-dev' || 'reaktoro-pse' }}
       - name: Install conda-forge dependencies
         run: |
           conda install reaktoro>=2.13 cyipopt>=1.4.1
@@ -80,9 +80,9 @@ jobs:
         run: |
           pip install watertap
           pip install idaes-pse>=2.8.0
-      - name: Install reaktoro_enabled_watertap
+      - name: Install Reaktoro-PSE
         run: |
-          pip install git+https://github.com/avdudchenko/reaktoro_enabled_watertap.git
+          pip install git+https://github.com/watertap-org/reaktoro-pse.git
       - if: matrix.install-mode == 'dev'
         name: Install (dev)
         run: |
@@ -109,12 +109,12 @@ jobs:
       #     jupyter kernelspec list
       # - name: Run pytest with nbmake
       #   run: |
-      #     # watertap is needed to run the following notebooks in src/reaktoro_pse/tutorials:
+      #     # watertap is needed to run the following notebooks in src/reaktoro_enabled_watertap/tutorials:
       #     # - basic_reaktoro_block_interaction.ipynb
       #     # - integration_with_ro.ipynb
       #     pip install watertap
       #     pip install "idaes-pse>=2.8.0" 
-      #     pytest --nbmake --nbmake-kernel="${{ env.KERNEL_NAME }}" src/reaktoro_pse/tutorials/*.ipynb
+      #     pytest --nbmake --nbmake-kernel="${{ env.KERNEL_NAME }}" src/reaktoro_enabled_watertap/tutorials/*.ipynb
       - name: Upload coverage report as job artifact
         if: matrix.coverage
         uses: actions/upload-artifact@v4
