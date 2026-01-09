@@ -9,7 +9,7 @@ on:
 env:
   PYTEST_ADDOPTS: --color=yes
   PIP_PROGRESS_BAR: "off"
-  KERNEL_NAME: reaktoro-pse-dev
+  KERNEL_NAME: reaktoro_enabled_watertap
 defaults:
   run:
     # -l: login shell, needed when using Conda:
@@ -31,7 +31,7 @@ jobs:
         # but we still want to specify the Black version to use in requirements-dev.txt for local development
         # so we extract the relevant line and pass it to a simple `pip install`
         run: |
-          black_requirement="$(grep '^black==' requirements-dev.txt)"
+          black_requirement="$(grep '^black==' requirements.txt)"
           pip install "$black_requirement"
       - name: Run Black to verify that the committed code is formatted
         run: |
