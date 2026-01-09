@@ -31,7 +31,7 @@ jobs:
         # but we still want to specify the Black version to use in requirements-dev.txt for local development
         # so we extract the relevant line and pass it to a simple `pip install`
         run: |
-          black_requirement="$(grep '^black==' requirements.txt)"
+          black_requirement="$(grep '^black==' requirements-dev.txt)"
           pip install "$black_requirement"
       - name: Run Black to verify that the committed code is formatted
         run: |
@@ -86,7 +86,7 @@ jobs:
       - if: matrix.install-mode == 'dev'
         name: Install (dev)
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           pip list
       - if: matrix.install-mode == 'standard'
         name: Install (standard)

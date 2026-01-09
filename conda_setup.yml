@@ -12,5 +12,4 @@ dependencies:
       - git+https://github.com/watertap-org/reaktoro-pse.git
       - git+https://github.com/watertap-org/parameter-sweep.git
       - git+https://github.com/avdudchenko/psPlotKit.git
-      - idaes-pse>=2.8.0
-      - -r requirements.txt
+      - -r requirements-dev.txt
