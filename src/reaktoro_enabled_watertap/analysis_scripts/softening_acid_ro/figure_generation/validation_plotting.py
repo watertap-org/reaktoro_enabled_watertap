@@ -224,7 +224,7 @@ if __name__ == "__main__":
         )
         fig = figureGenerator()
         fig.init_figure(width=3, height=2)
-        for acid, color in acids.items():
+        for acid, marker in acids.items():
             dm = case_details["dm"]
             vd = case_details["val_data"]
 
@@ -271,7 +271,7 @@ if __name__ == "__main__":
         )
         fig = figureGenerator()
         fig.init_figure(width=3, height=2)
-        for acid, color in acids.items():
+        for acid, marker in acids.items():
             dm = case_details["dm"]
             vd = case_details["val_data"]
             x, y = get_val_data(
@@ -325,7 +325,7 @@ if __name__ == "__main__":
         )
         fig = figureGenerator()
         fig.init_figure(width=3, height=2)
-        for acid, color in acids.items():
+        for acid, marker in acids.items():
             dm = case_details["dm"]
             vd = case_details["val_data"]
             if case == "Seawater":
@@ -384,7 +384,7 @@ if __name__ == "__main__":
         )
         fig = figureGenerator()
         fig.init_figure(width=3, height=2)
-        for acid, color in acids.items():
+        for acid, marker in acids.items():
             dm = case_details["dm"]
             vd = case_details["val_data"]
             if case == "Seawater":
