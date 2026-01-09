@@ -82,7 +82,7 @@ jobs:
           pip install idaes-pse>=2.8.0
       - name: Install Reaktoro-PSE
         run: |
-          pip install git+https://github.com/watertap-org/reaktoro-pse.git
+          pip install git+https://github.com/avdudchenko/reaktoro_enabled_watertap.git
       - if: matrix.install-mode == 'dev'
         name: Install (dev)
         run: |
