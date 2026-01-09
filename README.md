@@ -1,4 +1,4 @@
-# reaktoro_enabled_watertap
+# Reaktoro Enabled Watertap
 ## 1 Introduction 
 This is a repository for disseminating Reactor-enabled flowsheet units to use in various analyses, as well as supporting a simpler method for building WaterTap flowsheets using pre-configured unit models. 
 
