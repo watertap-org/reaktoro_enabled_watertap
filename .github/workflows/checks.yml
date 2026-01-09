@@ -72,7 +72,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           channels: conda-forge
-          activate-environment: ${{ matrix.install-mode == 'dev' && 'reaktoro-pse-dev' || 'reaktoro-pse' }}
+          activate-environment: ${{ matrix.install-mode == 'dev' && 'reaktoro_enabled_watertap-dev' || 'reaktoro_enabled_watertap' }}
       - name: Install conda-forge dependencies
         run: |
           conda install reaktoro>=2.13 cyipopt>=1.4.1
@@ -80,7 +80,7 @@ jobs:
         run: |
           pip install watertap
           pip install idaes-pse>=2.8.0
-      - name: Install Reaktoro-PSE
+      - name: Install reaktoro_enabled_watertap
         run: |
           pip install git+https://github.com/avdudchenko/reaktoro_enabled_watertap.git
       - if: matrix.install-mode == 'dev'
@@ -101,7 +101,7 @@ jobs:
       - name: Run pytest
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest --pyargs reaktoro_pse --verbose
+          pytest --pyargs reaktoro_enabled_watertap --verbose
       # - name: Install Jupyter kernel
       #   run: |
       #     jupyter kernelspec list
