@@ -5,11 +5,11 @@ from idaes.core import (
 )
 from pyomo.common.config import ConfigValue
 
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.connection_utility import (
+from reaktoro_enabled_watertap.utils.connection_utility import (
     PortContainer,
     ConnectionContainer,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.report_util import (
+from reaktoro_enabled_watertap.utils.report_util import (
     build_report_table,
 )
 

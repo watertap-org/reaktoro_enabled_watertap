@@ -1,17 +1,16 @@
 import pytest
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_feed_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_feed_unit import (
     MultiCompFeed,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_ph_mixer_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_ph_mixer_unit import (
     MixerPhUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.water_sources.source_water_importer import (
+from reaktoro_enabled_watertap.water_sources.source_water_importer import (
     get_source_water_data,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.cyipot_solver import (
-    get_cyipopt_solver,
+from reaktoro_pse.core.util_classes.cyipopt_solver import (
+    get_cyipopt_watertap_solver,
 )
-
 from pyomo.environ import ConcreteModel
 from idaes.core import (
     FlowsheetBlock,
@@ -33,17 +32,14 @@ from pyomo.environ import (
     units as pyunits,
 )
 
+
 __author__ = "Alexander Dudchenko"
 
 
 @pytest.mark.component
 def test_mixing_sea_brackish_water():
-    mcas_props, USDA_feed_specs = get_source_water_data(
-        f"../../water_sources/USDA_brackish.yaml"
-    )
-    _, sea_water_feed_specs = get_source_water_data(
-        f"../../water_sources/Seawater.yaml"
-    )
+    mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
+    _, sea_water_feed_specs = get_source_water_data(f"Seawater.yaml")
     m = ConcreteModel()
     m.fs = FlowsheetBlock()
 
@@ -53,12 +49,12 @@ def test_mixing_sea_brackish_water():
     m.fs.properties = MCASParameterBlock(**mcas_props)
     m.fs.usda_feed = MultiCompFeed(
         default_property_package=m.fs.properties,
-        charge_balance_with_reaktoro=True,
+        reconcile_using_reaktoro=True,
         **USDA_feed_specs,
     )
     m.fs.sea_water_feed = MultiCompFeed(
         default_property_package=m.fs.properties,
-        charge_balance_with_reaktoro=True,
+        reconcile_using_reaktoro=True,
         **sea_water_feed_specs,
     )
     m.fs.usda_feed.fix_and_scale()
@@ -81,7 +77,7 @@ def test_mixing_sea_brackish_water():
     m.fs.mixer.initialize()
     m.fs.mixer.report()
     assert degrees_of_freedom(m) == 0
-    solver = get_cyipopt_solver(10)
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.mixer.report()
@@ -91,7 +87,7 @@ def test_mixing_sea_brackish_water():
             m.fs.mixer.mixer.pH["outlet"].value,
             1e-5,
         )
-        == 7.1033
+        == 7.3150
     )
     assert (
         pytest.approx(
@@ -119,12 +115,8 @@ def test_mixing_sea_brackish_water():
 
 @pytest.mark.component
 def test_mixing_sea_brackish_water_no_rkt():
-    mcas_props, USDA_feed_specs = get_source_water_data(
-        f"../../water_sources/USDA_brackish.yaml"
-    )
-    _, sea_water_feed_specs = get_source_water_data(
-        f"../../water_sources/Seawater.yaml"
-    )
+    mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
+    _, sea_water_feed_specs = get_source_water_data(f"Seawater.yaml")
     m = ConcreteModel()
     m.fs = FlowsheetBlock()
 
@@ -134,12 +126,12 @@ def test_mixing_sea_brackish_water_no_rkt():
     m.fs.properties = MCASParameterBlock(**mcas_props)
     m.fs.usda_feed = MultiCompFeed(
         default_property_package=m.fs.properties,
-        charge_balance_with_reaktoro=True,
+        reconcile_using_reaktoro=True,
         **USDA_feed_specs,
     )
     m.fs.sea_water_feed = MultiCompFeed(
         default_property_package=m.fs.properties,
-        charge_balance_with_reaktoro=True,
+        reconcile_using_reaktoro=True,
         **sea_water_feed_specs,
     )
     m.fs.usda_feed.fix_and_scale()
@@ -163,7 +155,7 @@ def test_mixing_sea_brackish_water_no_rkt():
     m.fs.mixer.initialize()
     m.fs.mixer.report()
     assert degrees_of_freedom(m) == 0
-    solver = get_cyipopt_solver(10)
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.mixer.report()
@@ -173,7 +165,7 @@ def test_mixing_sea_brackish_water_no_rkt():
             m.fs.mixer.mixer.pH["outlet"].value,
             1e-5,
         )
-        == 7.1033
+        == 7.3150
     )
     assert (
         pytest.approx(

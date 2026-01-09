@@ -2,10 +2,13 @@ import yaml
 from pyomo.environ import (
     units as pyunits,
 )
+from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
 
-def get_source_water_data(file_location):
+def get_source_water_data(water_source, file_location=None):
     """simple function to load feed water compostion from yaml file"""
+    if file_location is None:
+        file_location = get_lib_path() / "water_sources" / water_source
     with open(file_location, "r") as ymlfile:
         data_dict = yaml.safe_load(ymlfile)
     # Converts yaml structure to dict structure for use with MCAS
@@ -21,7 +24,7 @@ def get_source_water_data(file_location):
     pH = float(data_dict["pH"])
     feed_temperature = data_dict.get("temperature", 293.15)
     alkalinity = data_dict.get("alkalinity_as_CaCO3", None)
-    print("NERWCOW")
+
     if alkalinity != None:
         alkalinity = float(alkalinity) * pyunits.mg / pyunits.L
     feed_spec_dict = {

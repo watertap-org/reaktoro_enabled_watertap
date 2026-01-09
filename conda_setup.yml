@@ -1,11 +1,16 @@
-name: rkt_enabled_flowsheets
+name: reaktoro_enabled_watertap
 channels: 
   - conda-forge
   - defaults
 dependencies:
-  - python=3.12*
+  - python=3.12
   - cyipopt
   - reaktoro
+  - pip
   - pip:
       - watertap
       - git+https://github.com/watertap-org/reaktoro-pse.git
+      - git+https://github.com/watertap-org/parameter-sweep.git
+      - git+https://github.com/avdudchenko/psPlotKit.git
+      - idaes-pse>=2.8.0
+      - -r requirements.txt

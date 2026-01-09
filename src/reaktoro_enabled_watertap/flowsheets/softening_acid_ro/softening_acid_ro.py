@@ -1,30 +1,32 @@
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_feed_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_feed_unit import (
     MultiCompFeed,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.water_sources.source_water_importer import (
+from reaktoro_enabled_watertap.water_sources.source_water_importer import (
     get_source_water_data,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_product_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_product_unit import (
     MultiCompProduct,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_ph_mixer_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_ph_mixer_unit import (
     MixerPhUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_erd_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_erd_unit import (
     MultiCompERDUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_pump_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_pump_unit import (
     MultiCompPumpUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_ro_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_ro_unit import (
     MultiCompROUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.precipitation_unit import (
+from reaktoro_enabled_watertap.unit_models.precipitation_unit import (
     PrecipitationUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.chemical_addition_unit import (
+from reaktoro_enabled_watertap.unit_models.chemical_addition_unit import (
     ChemicalAdditionUnit,
 )
+
+from reaktoro_enabled_watertap.utils import ipopt_performance_utils as ipopt_perf_utils
 from pyomo.environ import (
     TransformationFactory,
     units as pyunits,
@@ -50,7 +52,7 @@ from reaktoro_pse.core.util_classes.cyipopt_solver import (
 from pyomo.environ import (
     assert_optimal_termination,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.report_util import (
+from reaktoro_enabled_watertap.utils.report_util import (
     build_report_table,
 )
 from idaes.core.util.model_statistics import degrees_of_freedom
@@ -58,39 +60,62 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 from watertap.core.util.model_diagnostics.infeasible import *
 import os
 import tempfile
-import re
+
+from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
 
-def main():
-    feed_water = "../water_sources/USDA_brackish.yaml"
-    feed_water = "../water_sources/sample_500_hardness.yaml"
-    feed_water = "../water_sources/sample_1500_hardness.yaml"
-    # feed_water = "../water_sources/Seawater.yaml"
-    m = build_model(
-        feed_water,
-        hpro=False,
-        rkt_hessian_type="LBFGS",
-        bfgs_initialization_type="GaussNewton",
-    )
-    initialize(m)
-    if False:  # "USDA" in feed_water:
-        m.fs.water_recovery.fix(60 / 100)
-        solve_model(m)
-        m.fs.water_recovery.fix(65 / 100)
-        solve_model(m)
-        start = 70
-    else:
-        start = 50
-    for r in range(start, 91, 1):
-        m.fs.water_recovery.fix(r / 100)
-        print(f"\n\n------------Solving for water recovery: {r}%------------")
-        solve_model(m, tee=True)
+def main(
+    multi_process_reaktoro=True, result_save_location="default", linear_solver="mumps"
+):
+    if result_save_location == "default":
+        result_save_location = os.path.join(get_lib_path(), "flowsheets/results")
+
+    for water in [
+        "USDA_brackish.yaml",
+        # "sample_500_hardness.yaml",  # requires ma27
+        # "sample_1500_hardness.yaml",  # requres ma27
+        "Seawater.yaml",
+    ]:
+        if (
+            water == "sample_500_hardness.yaml" or water == "sample_1500_hardness.yaml"
+        ) and linear_solver == "mumps":
+            import time
+
+            print(
+                "\n\n\n\nSample 500 and 1500, do not solve well with mumps!!!!!!!!!!!!\n\n\n\n"
+            )
+
+            time.sleep(4)
+        if "Seawater" in water:
+            hpro = True
+        else:
+            hpro = False
+
+        m = build_model(
+            water,
+            multi_process_reaktoro=multi_process_reaktoro,
+            hpro=hpro,
+            rkt_hessian_type="LBFGS",
+            bfgs_initialization_type="GaussNewton",
+        )
+        initialize(m)
+
+        # m.fs.water_recovery.fix(65 / 100)
+        # print(f"\n\n------------Solving for water recovery: {65}%------------")
+        # solve_model(m, tee=True)
+        for r in [80]:
+            m.fs.water_recovery.fix(r / 100)
+            print(f"\n\n------------Solving for water recovery: {r}%------------")
+            solve_model(m, linear_solver=linear_solver, tee=True)
+
         report_all_units(m)
         print("------vars_close_to_bound-tests---------")
         print_variables_close_to_bounds(m)
         print("------constraints_close_to_bound-tests---------")
-
         print_constraints_close_to_bounds(m)
+        if m.find_component("reaktoro_manager") is not None:
+
+            m.reaktoro_manager.terminate_workers()
 
 
 def enable_multi_process_reaktoro(
@@ -135,7 +160,8 @@ def build_model(
     hpro=False,
     rkt_hessian_type="BFGS",
     bfgs_initialization_type="GaussNewton",
-    # rkt_scaling_type="variable_oi_scaling_square_sum",
+    softening_reagents=["Na2CO3", "CaO"],
+    acidification_reagents=["HCl", "H2SO4"],
 ):
     """Builds the flowsheet model for the softening-acidification-RO process.
     Args:
@@ -153,6 +179,8 @@ def build_model(
                 - BFGS_mod - modified BFGS
                 - BFGS_damp - damped BFGS
                 - BFGS_ipopt - BFGS with ipopt update step
+        softening_reagents (list): List of reagents to use in the softening unit.
+        acidification_reagents (list): List of reagents to use in the acidification unit.
     """
 
     mcas_props, feed_specs = get_source_water_data(water_case)
@@ -172,9 +200,6 @@ def build_model(
             "hessian_type": rkt_hessian_type,
             "bfgs_initialization_type": bfgs_initialization_type,
         }
-        # "jacobian_options": {
-        #     "scaling_type": rkt_scaling_type,
-        # },
     }
     if bfgs_initialization_type == "constant":
         rkt_options["hessian_options"]["bfgs_init_const_hessian_value"] = 1e-16
@@ -182,9 +207,6 @@ def build_model(
         rkt_options = enable_multi_process_reaktoro(
             m, rkt_hessian_type, bfgs_initialization_type
         )
-        # rkt_options["jacobian_options"] = {
-        #     "scaling_type": rkt_scaling_type,
-        # }
 
     m.fs = FlowsheetBlock()
     m.fs.costing = WaterTAPCosting()
@@ -195,6 +217,10 @@ def build_model(
         reconcile_using_reaktoro=True,
         **feed_specs,
     )
+    if isinstance(softening_reagents, str):
+        softening_reagents = [softening_reagents]
+    if isinstance(acidification_reagents, str):
+        acidification_reagents = [acidification_reagents]
     m.fs.softening_unit = PrecipitationUnit(
         default_property_package=m.fs.properties,
         default_costing_package=m.fs.costing,
@@ -202,7 +228,7 @@ def build_model(
             "Calcite",
             "Brucite",
         ],
-        selected_reagents=["Na2CO3", "CaO"],
+        selected_reagents=softening_reagents,
         add_alkalinity=True,
         reaktoro_options=rkt_options,
     )
@@ -210,7 +236,7 @@ def build_model(
     m.fs.acidification_unit = ChemicalAdditionUnit(
         default_property_package=m.fs.properties,
         default_costing_package=m.fs.costing,
-        selected_reagents=["HCl", "H2SO4"],
+        selected_reagents=acidification_reagents,
         reaktoro_options=rkt_options,
     )
     if "Seawater" in water_case:
@@ -323,7 +349,6 @@ def build_model(
     m.fs.costing.add_specific_energy_consumption(
         m.fs.product.product.properties[0].flow_vol
     )
-    # brackish  water cost is low, so lets scale it up
     m.fs.lcow_objective = Objective(expr=m.fs.costing.LCOW)
     TransformationFactory("network.expand_arcs").apply_to(m)
     add_global_constraints(m)
@@ -407,11 +432,14 @@ def fix_and_scale(m):
         unit.fix_and_scale()
     # limiiting maximum pH during optimization for
     # stability - in all example waters, pH in softening does not really operate
-    # above 10, but ability of softening unit to go above 10 can cuase instability
-    # when alkalinitry drops bellow <20-25 ppm.
+    # above 11, but ability of softening unit to go above 11 can cuase instability
+    # Additonally, when alkalinitry drops bellow <10 ppm we observe poor solvablity and in practice
+    # softening does not reduce alkalinity to below 20 ppm, as such
+    # we constrain it to 20 ppm
+    # (per veolia https://www.watertechnologies.com/handbook/chapter-07-precipitation-softening)
     max_ph = 11
     iscale.calculate_scaling_factors(m)
-    m.fs.softening_unit.precipitation_reactor.alkalinity.setlb(10)
+    m.fs.softening_unit.precipitation_reactor.alkalinity.setlb(20)
     m.fs.ro_unit.ro_feed.pH.setlb(6)
     m.fs.ro_unit.ro_feed.pH.setub(max_ph)
     if m.fs.find_component("hp_pump_unit") is not None:
@@ -471,43 +499,27 @@ def test_func(m, **kwargs):
     return True
 
 
-def solve_model(m, tee=True, **kwargs):
+def solve_model(m, tee=True, linear_solver="mumps", **kwargs):
     solver = get_cyipopt_watertap_solver(
-        linear_solver="ma27",
+        linear_solver=linear_solver,
         max_iter=1000,
         limited_memory=m.solver_limited_memory,
         scalar_type=m.solver_limited_memory_scalar,
     )
-    print(solver.options["linear_solver"])
     if m.fs.find_component("ipopt_iterations") is not None:
         tmp = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)
         tmp.close()
-        print(tmp.name)
         solver.options["output_file"] = tmp.name
     else:
         tmp = None
     result = solver.solve(m, tee=tee)
     if tmp is not None:
-        with open(tmp.name) as f:
-            lines = f.read()
-        iters_match = re.search(
-            r"""
-            Number\ of\ objective\ function\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            Number\ of\ objective\ gradient\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            Number\ of\ equality\ constraint\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            Number\ of\ inequality\ constraint\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            Number\ of\ equality\ constraint\ Jacobian\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            Number\ of\ inequality\ constraint\ Jacobian\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            Number\ of\ Lagrangian\ Hessian\ evaluations\s*=\s*([-+eE0-9.]+)\s*
-            """,
-            lines,
-            re.DOTALL | re.VERBOSE,
+        matched_keys, parsed_output = ipopt_perf_utils.get_ipopt_performance_data(
+            tmp.name
         )
         os.remove(tmp.name)
-        parsed_output = _parse_ipopt_output(lines)
-
         iters_keys = list(m.fs.ipopt_iterations.keys())
-        for i, k in enumerate(iters_match.groups()):
+        for i, k in enumerate(matched_keys.groups()):
             if k is not None:
                 k = int(float(k))
             else:
@@ -520,134 +532,8 @@ def solve_model(m, tee=True, **kwargs):
                 key, 0
             )
         m.fs.ipopt_iterations["Number of iterations"] = int(parsed_output["iters"])
-        # m.fs.ipopt_iterations.display()
-        # m.fs.scaled_ipopt_result.display()
-        # m.fs.unscaled_ipopt_result.display()
-    # report_all_units(m)
     assert_optimal_termination(result)
     return result
-
-
-def _parse_ipopt_output(output):
-    _ALPHA_PR_CHARS = set("fFhHkKnNRwstTr")
-
-    parsed_data = {}
-    import io
-
-    # Convert output to a string so we can parse it
-    if isinstance(output, io.StringIO):
-        output = output.getvalue()
-
-    # Extract number of iterations
-    iter_match = re.search(r"Number of Iterations.*:\s+(\d+)", output)
-    if iter_match:
-        parsed_data["iters"] = int(iter_match.group(1))
-    # Gather all the iteration data
-    iter_table = re.findall(r"^(?:\s*\d+.*?)$", output, re.MULTILINE)
-    if iter_table:
-        columns = [
-            "iter",
-            "objective",
-            "inf_pr",
-            "inf_du",
-            "lg_mu",
-            "d_norm",
-            "lg_rg",
-            "alpha_du",
-            "alpha_pr",
-            "ls",
-        ]
-        iterations = []
-
-        for line in iter_table:
-            tokens = line.strip().split()
-            if len(tokens) != len(columns):
-                continue
-            iter_data = dict(zip(columns, tokens))
-
-            # Extract restoration flag from 'iter'
-            iter_data["restoration"] = iter_data["iter"].endswith("r")
-            if iter_data["restoration"]:
-                iter_data["iter"] = iter_data["iter"][:-1]
-
-            # Separate alpha_pr into numeric part and optional tag
-            iter_data["step_acceptance"] = iter_data["alpha_pr"][-1]
-            if iter_data["step_acceptance"] in _ALPHA_PR_CHARS:
-                iter_data["alpha_pr"] = iter_data["alpha_pr"][:-1]
-            else:
-                iter_data["step_acceptance"] = None
-
-            # Attempt to cast all values to float where possible
-            for key in columns:
-                if iter_data[key] == "-":
-                    iter_data[key] = None
-                else:
-                    try:
-                        iter_data[key] = float(iter_data[key])
-                    except (ValueError, TypeError):
-                        print(
-                            "Error converting Ipopt log entry to "
-                            f"float:\n\t{sys.exc_info()[1]}\n\t{line}"
-                        )
-
-            # assert len(iterations) == iter_data.pop("iter"), (
-            #     f"Parsed row in the iterations table\n\t{line}\ndoes not "
-            #     f"match the next expected iteration number ({len(iterations)})"
-            # )
-            iterations.append(iter_data)
-
-        parsed_data["iteration_log"] = iterations
-
-    # Extract scaled and unscaled table
-    scaled_unscaled_match = re.search(
-        r"""
-        Objective\.*:\s*([-+eE0-9.]+)\s+([-+eE0-9.]+)\s*
-        Dual\ infeasibility\.*:\s*([-+eE0-9.]+)\s+([-+eE0-9.]+)\s*
-        Constraint\ violation\.*:\s*([-+eE0-9.]+)\s+([-+eE0-9.]+)\s*
-        (?:Variable\ bound\ violation:\s*([-+eE0-9.]+)\s+([-+eE0-9.]+)\s*)?
-        Complementarity\.*:\s*([-+eE0-9.]+)\s+([-+eE0-9.]+)\s*
-        Overall\ NLP\ error\.*:\s*([-+eE0-9.]+)\s+([-+eE0-9.]+)
-        """,
-        output,
-        re.DOTALL | re.VERBOSE,
-    )
-
-    if scaled_unscaled_match:
-        groups = scaled_unscaled_match.groups()
-        all_fields = [
-            "incumbent_objective",
-            "dual_infeasibility",
-            "constraint_violation",
-            "variable_bound_violation",  # optional
-            "complementarity_error",
-            "overall_nlp_error",
-        ]
-
-        # Filter out None values and create final fields and values.
-        # Nones occur in old-style IPOPT output (<= 3.13)
-        zipped = [
-            (field, scaled, unscaled)
-            for field, scaled, unscaled in zip(all_fields, groups[0::2], groups[1::2])
-            if scaled is not None and unscaled is not None
-        ]
-
-        scaled = {k: float(s) for k, s, _ in zipped}
-        unscaled = {k: float(u) for k, _, u in zipped}
-
-        parsed_data.update(unscaled)
-        parsed_data["final_scaled_results"] = scaled
-
-    # Newer versions of IPOPT no longer separate timing into
-    # two different values. This is so we have compatibility with
-    # both new and old versions
-    parsed_data["cpu_seconds"] = {
-        k.strip(): float(v)
-        for k, v in re.findall(
-            r"Total(?: CPU)? sec(?:ond)?s in ([^=]+)=\s*([0-9.]+)", output
-        )
-    }
-
-    return parsed_data
 
 
 if __name__ == "__main__":

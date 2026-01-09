@@ -1,16 +1,16 @@
 import pytest
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.chemical_addition_unit import (
+from reaktoro_enabled_watertap.unit_models.chemical_addition_unit import (
     ChemicalAdditionUnit,
 )
 
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.reaktoro_utils import (
+from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ViableReagents,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.tests.test_multi_comp_feed_product import (
+from reaktoro_enabled_watertap.unit_models.tests.test_multi_comp_feed_product import (
     build_case,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.cyipot_solver import (
-    get_cyipopt_solver,
+from reaktoro_pse.core.util_classes.cyipopt_solver import (
+    get_cyipopt_watertap_solver,
 )
 from pyomo.environ import (
     assert_optimal_termination,
@@ -46,7 +46,7 @@ def test_acid_default():
     m.fs.acidification.report(use_default_units=True)
     assert degrees_of_freedom(m) == 0
 
-    solver = get_cyipopt_solver()
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.acidification.report()
@@ -79,7 +79,7 @@ def test_acid_without_reaktoro_default():
     m.fs.acidification.report(use_default_units=True)
     assert degrees_of_freedom(m) == 0
 
-    solver = get_cyipopt_solver()
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.acidification.report()
@@ -114,7 +114,7 @@ def test_costing():
 
     assert degrees_of_freedom(m) == 0
 
-    solver = get_cyipopt_solver()
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.acidification.report()
@@ -154,7 +154,7 @@ def test_acidification_with_all_options():
 
     assert degrees_of_freedom(m) == 0
 
-    solver = get_cyipopt_solver()
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.acidification.report()
@@ -196,7 +196,7 @@ def test_acidification_with_custom_options():
 
     assert degrees_of_freedom(m) == 0
 
-    solver = get_cyipopt_solver()
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.basification.report()

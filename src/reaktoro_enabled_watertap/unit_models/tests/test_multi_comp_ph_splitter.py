@@ -1,17 +1,16 @@
 import pytest
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_feed_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_feed_unit import (
     MultiCompFeed,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_ph_splitter import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_ph_splitter import (
     SplitterPhUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.water_sources.source_water_importer import (
+from reaktoro_enabled_watertap.water_sources.source_water_importer import (
     get_source_water_data,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.cyipot_solver import (
-    get_cyipopt_solver,
+from reaktoro_pse.core.util_classes.cyipopt_solver import (
+    get_cyipopt_watertap_solver,
 )
-
 from pyomo.environ import ConcreteModel
 from idaes.core import (
     FlowsheetBlock,
@@ -38,9 +37,7 @@ __author__ = "Alexander Dudchenko"
 
 @pytest.mark.component
 def test_splitter():
-    mcas_props, USDA_feed_specs = get_source_water_data(
-        f"../../water_sources/USDA_brackish.yaml"
-    )
+    mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
 
     m = ConcreteModel()
     m.fs = FlowsheetBlock()
@@ -51,7 +48,7 @@ def test_splitter():
     m.fs.properties = MCASParameterBlock(**mcas_props)
     m.fs.feed = MultiCompFeed(
         default_property_package=m.fs.properties,
-        charge_balance_with_reaktoro=True,
+        reconcile_using_reaktoro=True,
         **USDA_feed_specs,
     )
     m.fs.feed.fix_and_scale()
@@ -72,7 +69,7 @@ def test_splitter():
     m.fs.splitter.initialize()
     m.fs.splitter.report()
     assert degrees_of_freedom(m) == 0
-    solver = get_cyipopt_solver(10)
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.splitter.report()
@@ -116,9 +113,7 @@ def test_splitter():
 
 @pytest.mark.component
 def test_splitter_3_ports():
-    mcas_props, USDA_feed_specs = get_source_water_data(
-        f"../../water_sources/USDA_brackish.yaml"
-    )
+    mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
 
     m = ConcreteModel()
     m.fs = FlowsheetBlock()
@@ -129,7 +124,7 @@ def test_splitter_3_ports():
     m.fs.properties = MCASParameterBlock(**mcas_props)
     m.fs.feed = MultiCompFeed(
         default_property_package=m.fs.properties,
-        charge_balance_with_reaktoro=True,
+        reconcile_using_reaktoro=True,
         **USDA_feed_specs,
     )
     m.fs.feed.fix_and_scale()
@@ -150,7 +145,7 @@ def test_splitter_3_ports():
     m.fs.splitter.initialize()
     m.fs.splitter.report()
     assert degrees_of_freedom(m) == 0
-    solver = get_cyipopt_solver(10)
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.splitter.report()

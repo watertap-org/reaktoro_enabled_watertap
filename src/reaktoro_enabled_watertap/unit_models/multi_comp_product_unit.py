@@ -10,7 +10,7 @@ from pyomo.environ import (
     Var,
     units as pyunits,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.watertap_flowsheet_block import (
+from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
 

@@ -1,11 +1,11 @@
 __author__ = "Alexander Dudchenko"
 
 
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.watertap_flowsheet_block import (
+from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
 from idaes.core.util.initialization import propagate_state
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.reaktoro_utils import (
+from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ReaktoroOptionsContainer,
 )
 from watertap.core.solvers import get_solver

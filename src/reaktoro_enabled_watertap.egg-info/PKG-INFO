@@ -1,3 +1,11 @@
+Metadata-Version: 2.4
+Name: reaktoro_enabled_watertap
+Version: 0.0.0
+Description-Content-Type: text/markdown
+Requires-Dist: pyomo
+Requires-Dist: idaes-pse>=2.5.0
+Requires-Dist: watertap>=1.0.0
+
 # reaktoro_enabled_watertap
 ## 1 Introduction 
 This is a repository for disseminating Reactor-enabled flowsheet units to use in various analyses, as well as supporting a simpler method for building WaterTap flowsheets using pre-configured unit models. 

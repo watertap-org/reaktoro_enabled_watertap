@@ -1,11 +1,11 @@
 import pytest
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_feed_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_feed_unit import (
     MultiCompFeed,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_product_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_product_unit import (
     MultiCompProduct,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.water_sources.source_water_importer import (
+from reaktoro_enabled_watertap.water_sources.source_water_importer import (
     get_source_water_data,
 )
 from pyomo.environ import ConcreteModel
@@ -33,7 +33,7 @@ __author__ = "Alexander Dudchenko"
 
 
 def build_case(water, reconcile_using_reaktoro=False):
-    mcas_props, feed_specs = get_source_water_data(f"../../water_sources/{water}.yaml")
+    mcas_props, feed_specs = get_source_water_data(f"{water}.yaml")
     m = ConcreteModel()
     m.fs = FlowsheetBlock()
 
@@ -52,7 +52,7 @@ def build_case(water, reconcile_using_reaktoro=False):
 
 
 def build_case_with_alk(water, reconcile_using_reaktoro=False):
-    mcas_props, feed_specs = get_source_water_data(f"../../water_sources/{water}.yaml")
+    mcas_props, feed_specs = get_source_water_data(f"{water}.yaml")
     feed_specs["alkalinity_as_CaCO3"] = 200 * pyunits.mg / pyunits.L
 
     m = ConcreteModel()

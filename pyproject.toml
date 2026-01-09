@@ -1,5 +1,5 @@
 [project]
-name = "recycled_softening_analysis"
+name = "reaktoro_enabled_watertap"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [

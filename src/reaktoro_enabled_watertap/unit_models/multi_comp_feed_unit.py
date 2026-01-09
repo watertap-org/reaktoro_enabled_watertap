@@ -18,7 +18,7 @@ from pyomo.environ import (
     units as pyunits,
 )
 from watertap.core.solvers import get_solver
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.watertap_flowsheet_block import (
+from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
 from reaktoro_pse.core.util_classes.cyipopt_solver import (
@@ -32,7 +32,7 @@ from watertap.core.util.initialization import interval_initializer
 import idaes.core.util.scaling as iscale
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 import idaes.logger as idaeslog
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.reaktoro_utils import (
+from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ReaktoroOptionsContainer,
 )
 

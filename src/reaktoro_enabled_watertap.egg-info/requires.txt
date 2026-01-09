@@ -1,0 +1,3 @@
+pyomo
+idaes-pse>=2.5.0
+watertap>=1.0.0

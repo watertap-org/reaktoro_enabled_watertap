@@ -1,15 +1,15 @@
 import pytest
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_erd_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_erd_unit import (
     MultiCompERDUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.multi_comp_pump_unit import (
+from reaktoro_enabled_watertap.unit_models.multi_comp_pump_unit import (
     MultiCompPumpUnit,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.unit_models.tests.test_multi_comp_feed_product import (
+from reaktoro_enabled_watertap.unit_models.tests.test_multi_comp_feed_product import (
     build_case,
 )
-from watertap.flowsheets.reaktoro_enabled_flowsheets.utils.cyipot_solver import (
-    get_cyipopt_solver,
+from reaktoro_pse.core.util_classes.cyipopt_solver import (
+    get_cyipopt_watertap_solver,
 )
 from pyomo.environ import (
     assert_optimal_termination,
@@ -55,7 +55,7 @@ def test_erd_pressure():
     m.fs.ERD_unit.report(use_default_units=True)
     assert degrees_of_freedom(m) == 0
 
-    solver = get_cyipopt_solver()
+    solver = get_cyipopt_watertap_solver()
     result = solver.solve(m, tee=True)
     assert_optimal_termination(result)
     m.fs.ERD_unit.report()

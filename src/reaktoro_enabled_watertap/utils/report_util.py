@@ -6,6 +6,13 @@ from pyomo.environ import (
 import sys
 from idaes.core.util.units_of_measurement import report_quantity
 
+import reaktoro_enabled_watertap
+import pathlib
+
+
+def get_lib_path():
+    return pathlib.Path(reaktoro_enabled_watertap.__file__).parent.resolve()
+
 
 def build_report_table(
     unit_name, data_dict, ostream=None, prefix="", use_default_units=False
