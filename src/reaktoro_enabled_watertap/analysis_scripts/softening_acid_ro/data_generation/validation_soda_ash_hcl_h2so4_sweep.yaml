@@ -1,0 +1,27 @@
+validation_sweep:
+  build_defaults:
+    softening_reagents: 'Na2CO3'
+  build_loop:
+    acidification_reagents:
+      - HCl
+      - H2SO4
+    build_loop:
+      water_sim_cases:
+        BGW:
+          water_case: "USDA_brackish.yaml"
+          hpro: False
+        SW_RO:
+          water_case: "Seawater.yaml"
+          hpro: False
+        SW_HPRO:
+          water_case: "Seawater.yaml"
+          hpro: True
+      sweep_param_loop:
+        water_recovery:
+          type: LinearSample
+          param: fs.water_recovery
+          lower_limit: 0.5
+          upper_limit: 0.9
+          num_samples: 41
+
+

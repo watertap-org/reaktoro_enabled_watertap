@@ -1,0 +1,202 @@
+#################################################################################
+# WaterTAP Copyright (c) 2020-2026, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory, Oak Ridge National Laboratory,
+# National Laboratory of the Rockies, and National Energy Technology
+# Laboratory (subject to receipt of any required approvals from the U.S. Dept.
+# of Energy). All rights reserved.
+#
+# Please see the files COPYRIGHT.md and LICENSE.md for full copyright and license
+# information, respectively. These files are also available online at the URL
+# "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
+#################################################################################
+
+import pytest
+from reaktoro_enabled_watertap.unit_models.multi_comp_feed_unit import (
+    MultiCompFeed,
+)
+from reaktoro_enabled_watertap.unit_models.multi_comp_ph_mixer_unit import (
+    MixerPhUnit,
+)
+from reaktoro_enabled_watertap.water_sources.source_water_importer import (
+    get_source_water_data,
+)
+from reaktoro_pse.core.util_classes.cyipopt_solver import (
+    get_cyipopt_watertap_solver,
+)
+from pyomo.environ import ConcreteModel
+from idaes.core import (
+    FlowsheetBlock,
+)
+
+from watertap.property_models.multicomp_aq_sol_prop_pack import (
+    MCASParameterBlock,
+    ActivityCoefficientModel,
+    DensityCalculation,
+)
+from pyomo.environ import (
+    assert_optimal_termination,
+)
+from idaes.core.util.model_statistics import degrees_of_freedom
+
+import idaes.core.util.scaling as iscale
+from pyomo.environ import (
+    TransformationFactory,
+)
+
+
+__author__ = "Alexander V. Dudchenko"
+
+
+@pytest.mark.component
+def test_mixing_sea_brackish_water():
+    mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
+    _, sea_water_feed_specs = get_source_water_data(f"Seawater.yaml")
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock()
+
+    mcas_props["activity_coefficient_model"] = ActivityCoefficientModel.ideal
+    mcas_props["density_calculation"] = DensityCalculation.constant
+
+    m.fs.properties = MCASParameterBlock(**mcas_props)
+    m.fs.usda_feed = MultiCompFeed(
+        default_property_package=m.fs.properties,
+        reconcile_using_reaktoro=True,
+        **USDA_feed_specs,
+    )
+    m.fs.sea_water_feed = MultiCompFeed(
+        default_property_package=m.fs.properties,
+        reconcile_using_reaktoro=True,
+        **sea_water_feed_specs,
+    )
+    m.fs.usda_feed.fix_and_scale()
+    m.fs.sea_water_feed.set_fixed_operation()
+
+    m.fs.mixer = MixerPhUnit(
+        default_property_package=m.fs.properties,
+        inlet_ports=["usda_feed", "sea_water_feed"],
+    )
+    m.fs.mixer.fix_and_scale()
+    m.fs.usda_feed.outlet.connect_to(m.fs.mixer.usda_feed)
+    m.fs.sea_water_feed.outlet.connect_to(m.fs.mixer.sea_water_feed)
+    TransformationFactory("network.expand_arcs").apply_to(m)
+    assert degrees_of_freedom(m) == 0
+    iscale.calculate_scaling_factors(m)
+
+    m.fs.usda_feed.initialize()
+
+    m.fs.sea_water_feed.initialize()
+    m.fs.mixer.initialize()
+    m.fs.mixer.report()
+    assert degrees_of_freedom(m) == 0
+    solver = get_cyipopt_watertap_solver()
+    result = solver.solve(m, tee=True)
+    assert_optimal_termination(result)
+    m.fs.mixer.report()
+    assert degrees_of_freedom(m) == 0
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.pH["outlet"].value,
+            1e-5,
+        )
+        == 7.3150
+    )
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.mixed_state[0].pressure.value,
+            1e-5,
+        )
+        == 101325
+    )
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.mixed_state[0].temperature.value,
+            1e-5,
+        )
+        == 293.15
+    )
+
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.mixed_state[0].flow_mass_phase_comp["Liq", "H2O"].value,
+            1e-5,
+        )
+        == 1.9622
+    )
+
+
+@pytest.mark.component
+def test_mixing_sea_brackish_water_no_rkt():
+    mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
+    _, sea_water_feed_specs = get_source_water_data(f"Seawater.yaml")
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock()
+
+    mcas_props["activity_coefficient_model"] = ActivityCoefficientModel.ideal
+    mcas_props["density_calculation"] = DensityCalculation.constant
+
+    m.fs.properties = MCASParameterBlock(**mcas_props)
+    m.fs.usda_feed = MultiCompFeed(
+        default_property_package=m.fs.properties,
+        reconcile_using_reaktoro=True,
+        **USDA_feed_specs,
+    )
+    m.fs.sea_water_feed = MultiCompFeed(
+        default_property_package=m.fs.properties,
+        reconcile_using_reaktoro=True,
+        **sea_water_feed_specs,
+    )
+    m.fs.usda_feed.fix_and_scale()
+    m.fs.sea_water_feed.set_fixed_operation()
+
+    m.fs.mixer = MixerPhUnit(
+        default_property_package=m.fs.properties,
+        inlet_ports=["usda_feed", "sea_water_feed"],
+        add_reaktoro_chemistry=False,
+    )
+    m.fs.mixer.fix_and_scale()
+    m.fs.usda_feed.outlet.connect_to(m.fs.mixer.usda_feed)
+    m.fs.sea_water_feed.outlet.connect_to(m.fs.mixer.sea_water_feed)
+    TransformationFactory("network.expand_arcs").apply_to(m)
+    assert degrees_of_freedom(m) == 0
+    iscale.calculate_scaling_factors(m)
+
+    m.fs.usda_feed.initialize()
+
+    m.fs.sea_water_feed.initialize()
+    m.fs.mixer.initialize()
+    m.fs.mixer.report()
+    assert degrees_of_freedom(m) == 0
+    solver = get_cyipopt_watertap_solver()
+    result = solver.solve(m, tee=True)
+    assert_optimal_termination(result)
+    m.fs.mixer.report()
+    assert degrees_of_freedom(m) == 0
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.pH["outlet"].value,
+            1e-5,
+        )
+        == 7.3150
+    )
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.mixed_state[0].pressure.value,
+            1e-5,
+        )
+        == 101325
+    )
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.mixed_state[0].temperature.value,
+            1e-5,
+        )
+        == 293.15
+    )
+
+    assert (
+        pytest.approx(
+            m.fs.mixer.mixer.mixed_state[0].flow_mass_phase_comp["Liq", "H2O"].value,
+            1e-5,
+        )
+        == 1.9622
+    )
