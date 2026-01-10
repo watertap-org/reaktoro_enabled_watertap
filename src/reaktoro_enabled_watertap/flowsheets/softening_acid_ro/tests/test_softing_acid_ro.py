@@ -3,7 +3,7 @@ from reaktoro_enabled_watertap.flowsheets.softening_acid_ro import (
 )
 
 
-__author__ = "Alexander Dudchenko"
+__author__ = "Alexander V. Dudchenko"
 from pyomo.environ import value
 import pytest
 

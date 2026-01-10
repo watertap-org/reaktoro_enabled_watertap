@@ -1,5 +1,16 @@
+#################################################################################
+# WaterTAP Copyright (c) 2020-2026, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory, Oak Ridge National Laboratory,
+# National Laboratory of the Rockies, and National Energy Technology
+# Laboratory (subject to receipt of any required approvals from the U.S. Dept.
+# of Energy). All rights reserved.
+#
+# Please see the files COPYRIGHT.md and LICENSE.md for full copyright and license
+# information, respectively. These files are also available online at the URL
+# "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
+#################################################################################
+
 from psPlotKit.data_manager.ps_data_manager import psDataManager
-from psPlotKit.data_plotter.ps_line_plotter import linePlotter
 from psPlotKit.data_plotter.fig_generator import figureGenerator
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 import pandas as pd
@@ -7,13 +18,15 @@ import pandas as pd
 import numpy as np
 
 
+__author__ = "Alexander V. Dudchenko"
+
+
 def get_csv_data_from_pd(file_path):
     df = pd.read_csv(file_path)
     return df
 
 
-def pandas_is_bad_at_data_processing(df, key, acid_type):
-    # Pandas is the worst thing that happened to python
+def get_specific_data(df, key, acid_type):
     data = df[key].to_numpy()
     idx = np.where(df["Acid choice"].to_numpy() == acid_type)
     return data[idx]
@@ -188,11 +201,8 @@ if __name__ == "__main__":
             dm = case_details["dm"]
             vd = case_details["val_data"]
             x, y = get_val_data(dm, case_details["case"], acid, "LCOW")
-            val_x = (
-                pandas_is_bad_at_data_processing(vd, "System recovery", acid.upper())
-                * 100
-            )
-            val_y = pandas_is_bad_at_data_processing(vd, "LCOW", acid.upper())
+            val_x = get_specific_data(vd, "System recovery", acid.upper()) * 100
+            val_y = get_specific_data(vd, "LCOW", acid.upper())
 
             if case == "Seawater":
                 yticks = [0, 0.5, 1.0, 1.5, 2.0]
@@ -234,13 +244,8 @@ if __name__ == "__main__":
                 acid,
                 ("softening chemical dose", "Soda ash"),
             )
-            val_x = (
-                pandas_is_bad_at_data_processing(vd, "System recovery", acid.upper())
-                * 100
-            )
-            val_y = pandas_is_bad_at_data_processing(
-                vd, "Optimal soda ash dose", acid.upper()
-            )
+            val_x = get_specific_data(vd, "System recovery", acid.upper()) * 100
+            val_y = get_specific_data(vd, "Optimal soda ash dose", acid.upper())
             if case == "Seawater":
                 yticks = [0, 200, 400, 600, 800, 1000]
             else:
@@ -280,13 +285,8 @@ if __name__ == "__main__":
                 acid,
                 ("acid addition dose", acid),
             )
-            val_x = (
-                pandas_is_bad_at_data_processing(vd, "System recovery", acid.upper())
-                * 100
-            )
-            val_y = pandas_is_bad_at_data_processing(
-                vd, "Optimal acid dose", acid.upper()
-            )
+            val_x = get_specific_data(vd, "System recovery", acid.upper()) * 100
+            val_y = get_specific_data(vd, "Optimal acid dose", acid.upper())
             if acid == "H2SO4":
                 val_y = (
                     val_y / 0.93
@@ -352,11 +352,8 @@ if __name__ == "__main__":
                     acid,
                     ("Scaling tendency", "Calcite"),
                 )
-            val_x = (
-                pandas_is_bad_at_data_processing(vd, "System recovery", acid.upper())
-                * 100
-            )
-            val_y = pandas_is_bad_at_data_processing(vd, "SI CaCO3", acid.upper())
+            val_x = get_specific_data(vd, "System recovery", acid.upper()) * 100
+            val_y = get_specific_data(vd, "SI CaCO3", acid.upper())
             yticks = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2]
             fig.plot_line(
                 x,
@@ -411,11 +408,8 @@ if __name__ == "__main__":
                     acid,
                     ("Scaling tendency", "Gypsum"),
                 )
-            val_x = (
-                pandas_is_bad_at_data_processing(vd, "System recovery", acid.upper())
-                * 100
-            )
-            val_y = pandas_is_bad_at_data_processing(vd, "SI Gypsum", acid.upper())
+            val_x = get_specific_data(vd, "System recovery", acid.upper()) * 100
+            val_y = get_specific_data(vd, "SI Gypsum", acid.upper())
             yticks = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2]
             fig.plot_line(
                 x,

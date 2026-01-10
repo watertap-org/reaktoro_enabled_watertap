@@ -1,4 +1,15 @@
-from watertap.core.util import scaling
+#################################################################################
+# WaterTAP Copyright (c) 2020-2026, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory, Oak Ridge National Laboratory,
+# National Laboratory of the Rockies, and National Energy Technology
+# Laboratory (subject to receipt of any required approvals from the U.S. Dept.
+# of Energy). All rights reserved.
+#
+# Please see the files COPYRIGHT.md and LICENSE.md for full copyright and license
+# information, respectively. These files are also available online at the URL
+# "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
+#################################################################################
+
 from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
@@ -13,7 +24,6 @@ from pyomo.environ import (
     Var,
     Constraint,
     value,
-    Param,
     Expression,
     Reals,
     units as pyunits,
@@ -29,10 +39,9 @@ from watertap.unit_models.stoichiometric_reactor import (
 )
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from collections import OrderedDict
-from pyomo.util.calc_var_value import calculate_variable_from_constraint
-import idaes.core.util.math as idaesMath
 
-__author__ = "Alexander Dudchenko"
+
+__author__ = "Alexander V. Dudchenko"
 
 
 class ViablePrecipitants(ViablePrecipitantsBase):

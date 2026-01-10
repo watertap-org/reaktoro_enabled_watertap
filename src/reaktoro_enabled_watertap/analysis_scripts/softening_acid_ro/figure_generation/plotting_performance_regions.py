@@ -1,7 +1,20 @@
+#################################################################################
+# WaterTAP Copyright (c) 2020-2026, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory, Oak Ridge National Laboratory,
+# National Laboratory of the Rockies, and National Energy Technology
+# Laboratory (subject to receipt of any required approvals from the U.S. Dept.
+# of Energy). All rights reserved.
+#
+# Please see the files COPYRIGHT.md and LICENSE.md for full copyright and license
+# information, respectively. These files are also available online at the URL
+# "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
+#################################################################################
+
 from psPlotKit.data_manager.ps_data_manager import psDataManager
-from psPlotKit.data_plotter.ps_line_plotter import linePlotter
 from psPlotKit.data_plotter.fig_generator import figureGenerator
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
+
+__author__ = "Alexander V. Dudchenko"
 
 
 def plot_fig(

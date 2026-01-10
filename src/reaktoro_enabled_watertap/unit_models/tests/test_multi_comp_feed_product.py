@@ -1,3 +1,15 @@
+#################################################################################
+# WaterTAP Copyright (c) 2020-2026, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory, Oak Ridge National Laboratory,
+# National Laboratory of the Rockies, and National Energy Technology
+# Laboratory (subject to receipt of any required approvals from the U.S. Dept.
+# of Energy). All rights reserved.
+#
+# Please see the files COPYRIGHT.md and LICENSE.md for full copyright and license
+# information, respectively. These files are also available online at the URL
+# "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
+#################################################################################
+
 import pytest
 from reaktoro_enabled_watertap.unit_models.multi_comp_feed_unit import (
     MultiCompFeed,
@@ -29,7 +41,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 import idaes.core.util.scaling as iscale
 
 
-__author__ = "Alexander Dudchenko"
+__author__ = "Alexander V. Dudchenko"
 
 
 def build_case(water, reconcile_using_reaktoro=False):
@@ -122,72 +134,72 @@ def test_mc_feed_with_alk():
     )
 
 
-# @pytest.mark.component
-# def test_product():
-#     m = build_case("USDA_brackish", False)
-#     m.fs.feed.report(use_default_units=True)
-#     m.fs.product = MultiCompProduct(
-#         default_property_package=m.fs.properties,
-#     )
+@pytest.mark.component
+def test_product():
+    m = build_case("USDA_brackish", False)
+    m.fs.feed.report(use_default_units=True)
+    m.fs.product = MultiCompProduct(
+        default_property_package=m.fs.properties,
+    )
 
-#     m.fs.feed.outlet.connect_to(m.fs.product.inlet)
-#     TransformationFactory("network.expand_arcs").apply_to(m)
-#     assert degrees_of_freedom(m) == 0
-#     iscale.calculate_scaling_factors(m)
-#     m.fs.feed.initialize()
-#     m.fs.product.initialize()
-#     assert pytest.approx(m.fs.product.product.pH.value, 1e-1) == 7
-#     assert (
-#         pytest.approx(
-#             m.fs.product.product.properties[0].flow_mass_phase_comp["Liq", "H2O"].value,
-#             1e-2,
-#         )
-#         == 0.99663795
-#     )
-#     assert (
-#         pytest.approx(
-#             m.fs.product.product.properties[0]
-#             .flow_mass_phase_comp["Liq", "Ca_2+"]
-#             .value,
-#             1e-2,
-#         )
-#         == 0.0002580
-#     )
+    m.fs.feed.outlet.connect_to(m.fs.product.inlet)
+    TransformationFactory("network.expand_arcs").apply_to(m)
+    assert degrees_of_freedom(m) == 0
+    iscale.calculate_scaling_factors(m)
+    m.fs.feed.initialize()
+    m.fs.product.initialize()
+    assert pytest.approx(m.fs.product.product.pH.value, 1e-1) == 7
+    assert (
+        pytest.approx(
+            m.fs.product.product.properties[0].flow_mass_phase_comp["Liq", "H2O"].value,
+            1e-2,
+        )
+        == 0.99663795
+    )
+    assert (
+        pytest.approx(
+            m.fs.product.product.properties[0]
+            .flow_mass_phase_comp["Liq", "Ca_2+"]
+            .value,
+            1e-2,
+        )
+        == 0.0002580
+    )
 
 
-# @pytest.mark.component
-# def test_with_reaktoro_intialization_feed():
-#     test_results = {
-#         "USDA_brackish": {
-#             "pH": 7.07,
-#             "H2O": 0.9965786471316685,
-#             "Cl_-": 0.9293536926966417,
-#         },
-#         "Seawater": {
-#             "pH": 7.56,
-#             "H2O": 0.9656354752143796,
-#             "Cl_-": 18.97752498232188,
-#         },
-#     }
-#     for watertype, results in test_results.items():
-#         m = build_case(watertype, True)
-#         print(m)
-#         iscale.calculate_scaling_factors(m)
-#         assert degrees_of_freedom(m) == 0
-#         m.fs.feed.initialize()
-#         assert degrees_of_freedom(m) == 0
-#         assert pytest.approx(m.fs.feed.feed.pH.value, 1e-3) == results["pH"]
-#         assert (
-#             pytest.approx(
-#                 m.fs.feed.feed.properties[0].flow_mass_phase_comp["Liq", "H2O"].value,
-#                 1e-5,
-#             )
-#             == results["H2O"]
-#         )
-#         assert (
-#             pytest.approx(
-#                 m.fs.feed.feed.properties[0].conc_mass_phase_comp["Liq", "Cl_-"].value,
-#                 1e-3,
-#             )
-#             == results["Cl_-"]
-#         )
+@pytest.mark.component
+def test_with_reaktoro_intialization_feed():
+    test_results = {
+        "USDA_brackish": {
+            "pH": 7.07,
+            "H2O": 0.9965786471316685,
+            "Cl_-": 0.9293536926966417,
+        },
+        "Seawater": {
+            "pH": 7.56,
+            "H2O": 0.9656354752143796,
+            "Cl_-": 18.97752498232188,
+        },
+    }
+    for watertype, results in test_results.items():
+        m = build_case(watertype, True)
+        print(m)
+        iscale.calculate_scaling_factors(m)
+        assert degrees_of_freedom(m) == 0
+        m.fs.feed.initialize()
+        assert degrees_of_freedom(m) == 0
+        assert pytest.approx(m.fs.feed.feed.pH.value, 1e-3) == results["pH"]
+        assert (
+            pytest.approx(
+                m.fs.feed.feed.properties[0].flow_mass_phase_comp["Liq", "H2O"].value,
+                1e-5,
+            )
+            == results["H2O"]
+        )
+        assert (
+            pytest.approx(
+                m.fs.feed.feed.properties[0].conc_mass_phase_comp["Liq", "Cl_-"].value,
+                1e-3,
+            )
+            == results["Cl_-"]
+        )
