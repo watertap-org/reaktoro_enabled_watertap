@@ -18,7 +18,7 @@ def test_softening_acid_ro_seawater_with_hpro():
         bfgs_initialization_type="GaussNewton",
     )
     sar.initialize(m)
-    m.fs.water_recovery.fix(0.725)
+    m.fs.water_recovery.fix(0.75)
     sar.solve_model(m, tee=True)
     m.fs.water_recovery.fix(0.8)
     sar.solve_model(m, tee=True)
