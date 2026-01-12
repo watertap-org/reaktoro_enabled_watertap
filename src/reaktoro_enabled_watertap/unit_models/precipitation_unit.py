@@ -426,12 +426,6 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
 
     def add_non_eq_reaktoro_chemistry(self):
 
-        # self.precipitation_reactor.scaling_tendency = Var(
-        #     ["non_eq_reactor", "maximum"],
-        #     self.selected_precipitants,
-        #     initialize=1,
-        #     units=pyunits.dimensionless,
-        # )
         self.precipitation_reactor.non_eq_flow_mol_precipitate = Var(
             self.selected_precipitants,
             initialize=1,
@@ -707,29 +701,18 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
                     mol_precip_scale,
                 )
                 iscale.set_scaling_factor(
-                    self.precipitation_reactor.non_eq_efficacy[precip], 1 / 10
+                    self.precipitation_reactor.non_eq_efficacy[precip], 1
                 )
                 iscale.constraint_scaling_transform(
                     self.precipitation_reactor.precipitation_limited_reaction[precip],
                     mol_precip_scale,
                 )
 
-        iscale.set_scaling_factor(self.precipitation_reactor.pH, 1 / 10)
+        iscale.set_scaling_factor(self.precipitation_reactor.pH, 1)
         if self.config.track_pE:
-            iscale.set_scaling_factor(self.precipitation_reactor.pE, 1 / 10)
+            iscale.set_scaling_factor(self.precipitation_reactor.pE, 1)
         if self.config.add_non_eq_reaktoro_chemistry:
-            iscale.set_scaling_factor(self.precipitation_reactor.eq_pH, 1 / 10)
-            # for phase in self.selected_precipitants:
-            #     iscale.set_scaling_factor(
-            #         self.precipitation_reactor.scaling_tendency[
-            #             "non_eq_reactor", phase
-            #         ],
-            #         1,
-            #     )
-            #     iscale.set_scaling_factor(
-            #         self.precipitation_reactor.scaling_tendency["maximum", phase],
-            #         1,
-            #     )
+            iscale.set_scaling_factor(self.precipitation_reactor.eq_pH, 1)
         if (
             self.config.add_reaktoro_chemistry
             or self.config.add_non_eq_reaktoro_chemistry
@@ -740,9 +723,9 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
             if self.config.add_alkalinity:
                 iscale.set_scaling_factor(self.precipitation_reactor.alkalinity, 1)
         else:
-            iscale.constraint_scaling_transform(self.eq_outlet_pH, 1 / 10)
+            iscale.constraint_scaling_transform(self.eq_outlet_pH, 1)
             if self.config.track_pE:
-                iscale.constraint_scaling_transform(self.eq_outlet_pE, 1 / 10)
+                iscale.constraint_scaling_transform(self.eq_outlet_pE, 1)
         if self.config.add_hardness:
             iscale.set_scaling_factor(self.precipitation_reactor.hardness["Ca"], 1)
             iscale.set_scaling_factor(self.precipitation_reactor.hardness["Mg"], 1)
@@ -864,8 +847,6 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
             model_state_dict["Reaktoro precipitation efficiency"] = (
                 self.precipitation_reactor.non_eq_efficacy
             )
-            # for key, value in self.precipitation_block.outputs.items():
-            #         model_state_dict[key] = value
         if self.config.default_costing_package is not None:
             model_state_dict["Costs"] = {
                 "Capital cost": self.precipitation_reactor.costing.capital_cost

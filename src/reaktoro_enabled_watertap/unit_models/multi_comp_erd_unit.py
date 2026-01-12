@@ -86,7 +86,7 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
                 bounds=(None, None),
             )
             tracked_vars["pE"] = self.ERD.pE
-        iscale.set_scaling_factor(self.ERD.pH, 1 / 10)
+        iscale.set_scaling_factor(self.ERD.pH, 1)
         self.register_port("inlet", self.ERD.inlet, tracked_vars)
         self.register_port("outlet", self.ERD.outlet, tracked_vars)
 
@@ -103,9 +103,9 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
         iscale.set_scaling_factor(self.ERD.inlet.pressure, 1e-5)
         iscale.set_scaling_factor(self.ERD.outlet.pressure, 1e-5)
         iscale.set_scaling_factor(self.ERD.control_volume.work, 1e-4)
-        iscale.set_scaling_factor(self.ERD.pH, 1 / 10)
+        iscale.set_scaling_factor(self.ERD.pH, 1)
         if self.config.track_pE:
-            iscale.set_scaling_factor(self.ERD.pE, 1 / 10)
+            iscale.set_scaling_factor(self.ERD.pE, 1)
 
     def initialize_unit(self):
         self.ERD.initialize()

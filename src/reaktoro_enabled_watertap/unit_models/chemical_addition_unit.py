@@ -246,8 +246,6 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
         self.reaktoro_options["register_new_chemistry_modifiers"] = (
             self.config.viable_reagents.get_reaktoro_chemistry_modifiers()
         )
-
-        # self.reaktoro_options["chemistry_modifier_log10_basis"] = True
         self.reaktoro_options["chemistry_modifier"] = reagents
         self.reaktoro_options["outputs"] = outputs
         self.reaktoro_options.update_with_user_options(self.config.reaktoro_options)
@@ -300,8 +298,8 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
                 self.chemical_reactor.reagent_dose[reagent], dose_scale
             )
         if self.chemical_reactor.find_component("pE") is not None:
-            iscale.set_scaling_factor(self.chemical_reactor.pE, 1 / 10)
-        iscale.set_scaling_factor(self.chemical_reactor.pH, 1 / 10)
+            iscale.set_scaling_factor(self.chemical_reactor.pE, 1)
+        iscale.set_scaling_factor(self.chemical_reactor.pH, 1)
         if self.config.add_reaktoro_chemistry:
             self.config.viable_reagents.scale_solvent_vars_and_constraints(
                 self.chemical_reactor

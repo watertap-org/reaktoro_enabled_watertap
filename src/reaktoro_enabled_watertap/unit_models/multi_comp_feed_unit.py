@@ -255,16 +255,16 @@ class MultiCompFeedData(WaterTapFlowsheetBlockData):
         # create sub model for feed
         sub_model.fs.feed = Feed(property_package=self.config.default_property_package)
         sub_model.fs.feed.pH = Var(units=pyunits.dimensionless)
-        iscale.set_scaling_factor(sub_model.fs.feed.pH, 1 / 10)
+        iscale.set_scaling_factor(sub_model.fs.feed.pH, 1)
         if self.config.pE is not None and self.config.pE is True:
             sub_model.fs.feed.pE = Var(
                 initialize=0,
                 units=pyunits.dimensionless,
             )
             sub_model.fs.feed.pE.fix()
-            iscale.set_scaling_factor(sub_model.fs.feed.pE, 1 / 10)
+            iscale.set_scaling_factor(sub_model.fs.feed.pE, 1)
         sub_model.fs.feed.alkalinity_as_CaCO3 = Var(units=pyunits.mg / pyunits.L)
-        iscale.set_scaling_factor(sub_model.fs.feed.alkalinity_as_CaCO3, 1 / 10)
+        iscale.set_scaling_factor(sub_model.fs.feed.alkalinity_as_CaCO3, 1)
         # set its conditions
         self.set_fixed_operation(alt_block=sub_model.fs.feed)
 
@@ -395,9 +395,9 @@ class MultiCompFeedData(WaterTapFlowsheetBlockData):
         assert degrees_of_freedom(self) == 0
 
     def scale_before_initialization(self, **kwargs):
-        iscale.set_scaling_factor(self.feed.pH, 1 / 10)
+        iscale.set_scaling_factor(self.feed.pH, 1)
         if self.find_component("pE") is not None:
-            iscale.set_scaling_factor(self.feed.pE, 1 / 10)
+            iscale.set_scaling_factor(self.feed.pE, 1)
         self.scale_feed()
 
     def scale_feed(self):

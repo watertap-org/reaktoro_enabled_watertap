@@ -196,7 +196,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         # set them up for translating input prop pack to outlet prop pack
         self.setup_inlet_translator_block(self.ro_feed)
 
-        # TODO: define outlet blocks to gether, so we can include pseudo rejection of ions
+        # TODO: define outlet blocks together, so we can include pseudo rejection of ions
         self.setup_outlet_translator_block(
             self.ro_retentate, self.ro_feed.inlet.flow_mol_phase_comp
         )
@@ -614,9 +614,6 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.98)
         self.ro_unit.feed_side.velocity[0, 0].fix(0.1)
 
-        self.ro_unit.feed_side.velocity[0, 0].setlb(0.1)
-        self.ro_unit.feed_side.velocity[0, 0].setub(0.3)
-
         for d in list(self.ro_unit.length_domain):
             self.ro_unit.feed_side.velocity[0, d].setub(0.3)
             self.ro_unit.feed_side.velocity[0, d].setlb(0.0001)
@@ -657,15 +654,15 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
     def scale_before_initialization(self, **kwargs):
         """scales the unit before initialization"""
-        iscale.set_scaling_factor(self.ro_feed.pH, 1 / 10)
-        iscale.set_scaling_factor(self.ro_retentate.pH, 1 / 10)
-        iscale.set_scaling_factor(self.ro_product.pH, 1 / 10)
-        iscale.set_scaling_factor(self.ro_interface_pH, 1 / 10)
+        iscale.set_scaling_factor(self.ro_feed.pH, 1)
+        iscale.set_scaling_factor(self.ro_retentate.pH, 1)
+        iscale.set_scaling_factor(self.ro_product.pH, 1)
+        iscale.set_scaling_factor(self.ro_interface_pH, 1)
         if self.config.track_pE:
-            iscale.set_scaling_factor(self.ro_feed.pE, 1 / 10)
-            iscale.set_scaling_factor(self.ro_retentate.pE, 1 / 10)
-            iscale.set_scaling_factor(self.ro_product.pE, 1 / 10)
-            iscale.set_scaling_factor(self.ro_interface_pE, 1 / 10)
+            iscale.set_scaling_factor(self.ro_feed.pE, 1)
+            iscale.set_scaling_factor(self.ro_retentate.pE, 1)
+            iscale.set_scaling_factor(self.ro_product.pE, 1)
+            iscale.set_scaling_factor(self.ro_interface_pE, 1)
         # scale monotone cp constraint if it exists
         if self.ro_unit.find_component("monotone_cp_constraint") is not None:
             for eq in self.ro_unit.monotone_cp_constraint:
@@ -699,12 +696,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             # for default property package, Water scaling is same for both
 
             for ion in block.eq_flow_mass_phase_comp:
-                sf = prop_scaling[ion]  # * sf_salt
+                sf = prop_scaling[ion]
                 iscale.constraint_scaling_transform(
                     block.eq_flow_mass_phase_comp[ion],
                     sf,
                 )
-
         # scale water removal constraint if it exists
         if self.ro_unit.find_component("eq_water_removed_at_interface") is not None:
             iscale.constraint_scaling_transform(
@@ -731,9 +727,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         if self.ro_retentate.find_component("eq_retentate_pE") is not None:
             iscale.constraint_scaling_transform(self.ro_retentate.eq_ph_equality, 1)
 
-        iscale.constraint_scaling_transform(
-            self.ro_product.eq_average_permeate_pH, 1 / 10
-        )
+        iscale.constraint_scaling_transform(self.ro_product.eq_average_permeate_pH, 1)
         if self.ro_product.find_component("eq_average_permeate_pE") is not None:
             iscale.constraint_scaling_transform(
                 self.ro_product.eq_average_permeate_pE, 1
@@ -766,7 +760,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             self.config.use_bulkcomp_for_effluent_pH == False
             and self.config.use_interfacecomp_for_effluent_pH
         ):
-            iscale.constraint_scaling_transform(self.eq_bulk_interface_ph, 1 / 10)
+            iscale.constraint_scaling_transform(self.eq_bulk_interface_ph, 1)
 
     def get_default_scaling_factors(self):
         """returns scale for ro property package and default property package"""
