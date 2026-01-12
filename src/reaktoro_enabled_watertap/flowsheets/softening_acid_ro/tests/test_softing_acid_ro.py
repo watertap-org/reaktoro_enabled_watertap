@@ -18,6 +18,8 @@ def test_softening_acid_ro_seawater_with_hpro():
         bfgs_initialization_type="GaussNewton",
     )
     sar.initialize(m)
+    m.fs.water_recovery.fix(0.725)
+    sar.solve_model(m, tee=True)
     m.fs.water_recovery.fix(0.8)
     sar.solve_model(m, tee=True)
     sar.report_all_units(m)
@@ -27,21 +29,21 @@ def test_softening_acid_ro_seawater_with_hpro():
             value(m.fs.costing.LCOW),
             1e-3,
         )
-        == 1.0299
+        == 1.0542
     )
     assert (
         pytest.approx(
             value(m.fs.softening_unit.precipitation_reactor.reagent_dose["CaO"]),
             1e-3,
         )
-        == 0.062552
+        == 0.062647
     )
     assert (
         pytest.approx(
             value(m.fs.softening_unit.precipitation_reactor.reagent_dose["Na2CO3"]),
             1e-3,
         )
-        == 0.29031
+        == 0.31345
     )
 
     assert (
@@ -49,7 +51,7 @@ def test_softening_acid_ro_seawater_with_hpro():
             value(m.fs.acidification_unit.chemical_reactor.reagent_dose["H2SO4"]),
             1e-3,
         )
-        == 0.0039240
+        == 0.0040669
     )
     assert (
         pytest.approx(

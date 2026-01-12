@@ -85,9 +85,9 @@ def main(
         result_save_location = os.path.join(get_lib_path(), "flowsheets/results")
 
     for water in [
-        "USDA_brackish.yaml",
-        # "sample_500_hardness.yaml",  # requires ma27
-        # "sample_1500_hardness.yaml",  # requres ma27
+        # "USDA_brackish.yaml",
+        "sample_500_hardness.yaml",  # requires ma27
+        "sample_1500_hardness.yaml",  # requres ma27
         "Seawater.yaml",
     ]:
         if (

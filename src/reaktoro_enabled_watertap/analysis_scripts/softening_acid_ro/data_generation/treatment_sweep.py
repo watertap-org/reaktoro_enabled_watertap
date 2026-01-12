@@ -12,6 +12,7 @@
 
 from parameter_sweep.loop_tool.loop_tool import loopTool, get_working_dir
 import reaktoro_enabled_watertap.flowsheets.softening_acid_ro.softening_acid_ro as sar
+import time
 
 __author__ = "Alexander V. Dudchenko"
 
@@ -22,6 +23,7 @@ def solve_with_ma27(m, tee=True, **kwargs):
 
 
 def main():
+    ts = time.time()
     cwd = get_working_dir()
     loopTool(
         cwd + "/treatment_lime_soda_ash_hcl_h2so4_sweep.yaml",
@@ -32,8 +34,10 @@ def main():
         probe_function=sar.test_func,
         saving_dir=cwd,
         number_of_subprocesses=1,
-        num_loop_workers=3,
+        num_loop_workers=1,
     )
+
+    print("Total time: ", time.time() - ts)
 
 
 if __name__ == "__main__":

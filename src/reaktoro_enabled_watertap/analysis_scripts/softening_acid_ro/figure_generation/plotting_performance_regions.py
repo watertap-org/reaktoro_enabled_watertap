@@ -89,7 +89,7 @@ if __name__ == "__main__":
     data_manager = psDataManager(
         str(
             work_path
-            / "analysis_scripts/softening_acid_ro/data_generation/output/treatment_lime_soda_ash_hcl_h2so4_sweep_analysisType_treatment_sweep.h5"
+            / "analysis_scripts/softening_acid_ro/data_generation/output/original_data/treatment_lime_soda_ash_hcl_h2so4_sweep_analysisType_treatment_sweep.h5"
         ),
     )
 

@@ -49,7 +49,7 @@ from idaes.models.unit_models import (
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from pyomo.network import Arc
 
-__author__ = "Alexander Dudchenko"
+__author__ = "Alexander V. Dudchenko"
 
 
 @declare_process_block_class("MultiCompROUnit")
@@ -613,6 +613,10 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.05)
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.98)
         self.ro_unit.feed_side.velocity[0, 0].fix(0.1)
+
+        self.ro_unit.feed_side.velocity[0, 0].setlb(0.1)
+        self.ro_unit.feed_side.velocity[0, 0].setub(0.3)
+
         for d in list(self.ro_unit.length_domain):
             self.ro_unit.feed_side.velocity[0, d].setub(0.3)
             self.ro_unit.feed_side.velocity[0, d].setlb(0.0001)
@@ -621,16 +625,8 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.feed_side.cp_modulus.setub(50)
         self.ro_unit.feed_side.cp_modulus.setlb(0.0)
         # Deals with low feed salinity
-        # for e in self.ro_unit.permeate_side:
-        #     if e[-1] != 0:
-        #         self.ro_unit.permeate_side[e].pressure_osm_phase["Liq"].setlb(200)
-        #         self.ro_unit.permeate_side[e].molality_phase_comp[
-        #             "Liq", self.ro_solute_type
-        #         ].setlb(1e-8)
-
         self.ro_unit.feed_side.K.setlb(1e-6)
         self.ro_unit.feed_side.friction_factor_darcy.setub(200)
-        self.report()
 
     def set_optimization_operation(self):
         """unfixes operation for optimization"""
@@ -647,11 +643,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.2)
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.95)
         self.activate_scaling_constraints()
-        # set min flux to be greater then 2.5 LMH
+        # set min flux to be greater then 5 LMH
         for phase in self.ro_unit.flux_mass_phase_comp:
             if "H2O" in phase:
                 self.ro_unit.flux_mass_phase_comp[phase].setlb(
-                    2.5 * pyunits.kg / (pyunits.m**2 * pyunits.hr)
+                    5 * pyunits.kg / (pyunits.m**2 * pyunits.hr)
                 )
                 self.ro_unit.flux_mass_phase_comp[phase].setub(
                     100 * pyunits.kg / (pyunits.m**2 * pyunits.hr)
