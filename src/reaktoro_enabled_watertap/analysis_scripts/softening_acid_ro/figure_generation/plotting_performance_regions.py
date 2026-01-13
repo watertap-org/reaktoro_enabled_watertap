@@ -89,7 +89,7 @@ if __name__ == "__main__":
     data_manager = psDataManager(
         str(
             work_path
-            / "analysis_scripts/softening_acid_ro/data_generation/output/original_data/treatment_lime_soda_ash_hcl_h2so4_sweep_analysisType_treatment_sweep.h5"
+            / "analysis_scripts/softening_acid_ro/data_generation/output/treatment_lime_soda_ash_hcl_h2so4_sweep_analysisType_treatment_sweep.h5"
         ),
     )
 
@@ -106,6 +106,14 @@ if __name__ == "__main__":
         {
             "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
             "return_key": ("HPRO1", "flux"),
+        },
+        {
+            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
+            "return_key": ("HPRO1", "flux inlet"),
+        },
+        {
+            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
+            "return_key": ("HPRO1", "flux outlet"),
         },
         {
             "filekey": f"fs.hpro_unit.ro_unit.area",
@@ -140,6 +148,14 @@ if __name__ == "__main__":
         {
             "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
             "return_key": ("RO1", "flux"),
+        },
+        {
+            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
+            "return_key": ("RO1", "flux inlet"),
+        },
+        {
+            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
+            "return_key": ("RO1", "flux outlet"),
         },
         {
             "filekey": f"fs.ro_unit.ro_unit.area",
@@ -242,7 +258,15 @@ if __name__ == "__main__":
         stack_keys="water_sim_cases", data_key="LCOW", reduction_type="min"
     )
     sea_water.display()
-    for t in ["area", "pressure", "velocity", "flux", "pH"]:
+    for t in [
+        "area",
+        "pressure",
+        "velocity",
+        "flux",
+        "pH",
+        "flux inlet",
+        "flux outlet",
+    ]:
 
         hpro_area = sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", t)].data
         ro_area = sea_water[("water_sim_cases", "SW_RO"), ("RO1", t)].data
@@ -295,7 +319,7 @@ if __name__ == "__main__":
         save_fig=False,
         width=1.8,
         height=1.6,
-        save_name="hpro_area",
+        save_name="hpro_avg_flux",
     )
     plot_fig(
         sea_water["stacked_data", "Water recovery"],
@@ -306,9 +330,35 @@ if __name__ == "__main__":
         save_fig=True,
         fig=fig,
         marker="s",
-        save_name="flux_area",
+        save_name="hpro_avg_flux",
         regions=regions["seawater"],
     )
+    for point in ["inlet", "outlet"]:
+        fig = plot_fig(
+            sea_water["stacked_data", "Water recovery"],
+            sea_water[("water_sim_cases", "SW_RO"), ("RO1", f"flux {point}")].data
+            * 3600,
+            ylabel="Flux (LMH)",
+            yticks=[0, 10, 20, 30, 40, 50, 60],
+            data_label="RO",
+            save_fig=False,
+            width=1.8,
+            height=1.6,
+            save_name=f"hpro_{point}_flux",
+        )
+        plot_fig(
+            sea_water["stacked_data", "Water recovery"],
+            sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", f"flux {point}")].data
+            * 3600,
+            ylabel="Flux (LMH)",
+            yticks=[0, 10, 20, 30, 40, 50, 60],
+            data_label="HPRO",
+            save_fig=True,
+            fig=fig,
+            marker="s",
+            save_name=f"hpro_{point}_flux",
+            regions=regions["seawater"],
+        )
     fig = plot_fig(
         sea_water["stacked_data", "Water recovery"],
         sea_water[("water_sim_cases", "SW_RO"), ("RO1", "area")],
@@ -563,9 +613,33 @@ if __name__ == "__main__":
             save_fig=True,
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_flux",
+            save_name=f"{hd}_avg_flux",
             regions=regions[hd],
         )
+        for point in ["inlet", "outlet"]:
+            fig = plot_fig(
+                data_manager[hd, "Water recovery"],
+                data_manager[hd, ("RO1", f"flux {point}")].data * 3600,
+                ylabel="Flux (LMH)",
+                yticks=[0, 10, 20, 30, 40, 50, 60],
+                data_label="RO",
+                save_fig=False,
+                width=1.8,
+                height=1.6,
+                save_name=f"{hd}_{point}_flux",
+            )
+            plot_fig(
+                data_manager[hd, "Water recovery"],
+                data_manager[hd, ("RO1", f"flux {point}")].data * 3600,
+                ylabel="Flux (LMH)",
+                yticks=[0, 10, 20, 30, 40, 50, 60],
+                data_label="HPRO",
+                save_fig=True,
+                fig=fig,
+                marker="s",
+                save_name=f"{hd}_{point}_flux",
+                regions=regions[hd],
+            )
         fig = plot_fig(
             data_manager[hd, "Water recovery"],
             data_manager[hd, ("RO1", "area")],

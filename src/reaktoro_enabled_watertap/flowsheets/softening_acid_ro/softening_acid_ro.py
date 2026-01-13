@@ -69,25 +69,30 @@ from reaktoro_enabled_watertap.utils.report_util import (
 )
 from idaes.core.util.model_statistics import degrees_of_freedom
 
+from reaktoro_enabled_watertap.utils import scale_utils as scu
 from watertap.core.util.model_diagnostics.infeasible import *
 import os
 import tempfile
 
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
+from reaktoro_enabled_watertap.costing import (
+    amusat_2024_stoichiometric_reactor_costing as ams,
+)
+
 
 __author__ = "Alexander V. Dudchenko"
 
 
 def main(
-    multi_process_reaktoro=True, result_save_location="default", linear_solver="mumps"
+    multi_process_reaktoro=True, result_save_location="default", linear_solver="ma27"
 ):
     if result_save_location == "default":
         result_save_location = os.path.join(get_lib_path(), "flowsheets/results")
 
     for water in [
         # "USDA_brackish.yaml",
-        "sample_500_hardness.yaml",  # requires ma27
-        "sample_1500_hardness.yaml",  # requres ma27
+        # "sample_500_hardness.yaml",  # requires ma27
+        # "sample_1500_hardness.yaml",  # requres ma27
         "Seawater.yaml",
     ]:
         if (
@@ -95,9 +100,7 @@ def main(
         ) and linear_solver == "mumps":
             import time
 
-            print(
-                "\n\n\n\nSample 500 and 1500, do not solve well with mumps!!!!!!!!!!!!\n\n\n\n"
-            )
+            print(f"\n\n\n\n{water}, do not solve well with mumps!!!!!!!!!!!!\n\n\n\n")
 
             time.sleep(4)
         if "Seawater" in water:
@@ -112,21 +115,16 @@ def main(
             rkt_hessian_type="LBFGS",
             bfgs_initialization_type="GaussNewton",
         )
-        initialize(m)
+        initialize(m, linear_solver=linear_solver)
 
         # m.fs.water_recovery.fix(65 / 100)
         # print(f"\n\n------------Solving for water recovery: {65}%------------")
         # solve_model(m, tee=True)
-        for r in [80]:
+        for r in [70, 80, 81, 82, 83, 84, 85, 86]:
             m.fs.water_recovery.fix(r / 100)
             print(f"\n\n------------Solving for water recovery: {r}%------------")
             solve_model(m, linear_solver=linear_solver, tee=True)
-
-        report_all_units(m)
-        print("------vars_close_to_bound-tests---------")
-        print_variables_close_to_bounds(m)
-        print("------constraints_close_to_bound-tests---------")
-        print_constraints_close_to_bounds(m)
+            report_all_units(m)
         if m.find_component("reaktoro_manager") is not None:
 
             m.reaktoro_manager.terminate_workers()
@@ -176,6 +174,8 @@ def build_model(
     bfgs_initialization_type="GaussNewton",
     softening_reagents=["Na2CO3", "CaO"],
     acidification_reagents=["HCl", "H2SO4"],
+    feed_flow_rate=5000 * pyunits.m**3 / pyunits.day,
+    softening_and_acid_costing="default",
 ):
     """Builds the flowsheet model for the softening-acidification-RO process.
     Args:
@@ -195,9 +195,18 @@ def build_model(
                 - BFGS_ipopt - BFGS with ipopt update step
         softening_reagents (list): List of reagents to use in the softening unit.
         acidification_reagents (list): List of reagents to use in the acidification unit.
+        feed_flow_rate: volumetric flow rate of the feed water to the system.
+        softening_and_acid_costing (str): Costing method for softening and acidification units. (default, or 'Amusat_et_al_2024')
     """
 
     mcas_props, feed_specs = get_source_water_data(water_case)
+    if feed_flow_rate is not None:
+        if isinstance(feed_flow_rate, dict):
+            feed_specs["volumetric_flowrate"] = feed_flow_rate["value"] * getattr(
+                pyunits, feed_flow_rate["units"]
+            )
+        else:
+            feed_specs["volumetric_flowrate"] = feed_flow_rate
     mcas_props["activity_coefficient_model"] = ActivityCoefficientModel.ideal
     mcas_props["density_calculation"] = DensityCalculation.constant
 
@@ -235,6 +244,16 @@ def build_model(
         softening_reagents = [softening_reagents]
     if isinstance(acidification_reagents, str):
         acidification_reagents = [acidification_reagents]
+    if softening_and_acid_costing == "default":
+        costing_type = {}
+    elif softening_and_acid_costing == "Amusat_et_al_2024":
+        costing_type = {"costing_method": ams.cost_stoichiometric_reactor}
+    else:
+        raise (
+            ValueError(
+                f"Unknown costing method {softening_and_acid_costing} for softening and acidification units."
+            )
+        )
     m.fs.softening_unit = PrecipitationUnit(
         default_property_package=m.fs.properties,
         default_costing_package=m.fs.costing,
@@ -245,6 +264,7 @@ def build_model(
         selected_reagents=softening_reagents,
         add_alkalinity=True,
         reaktoro_options=rkt_options,
+        default_costing_package_kwargs=costing_type,
     )
 
     m.fs.acidification_unit = ChemicalAdditionUnit(
@@ -252,6 +272,7 @@ def build_model(
         default_costing_package=m.fs.costing,
         selected_reagents=acidification_reagents,
         reaktoro_options=rkt_options,
+        default_costing_package_kwargs=costing_type,
     )
     if "Seawater" in water_case:
         ovp = 1.5
@@ -272,6 +293,7 @@ def build_model(
         selected_scalants={"Calcite": 1, "Gypsum": 1},
         use_interfacecomp_for_effluent_pH=True,
         reaktoro_options=rkt_options,
+        target_recovery=0.4,
     )
 
     m.fs.erd_unit = MultiCompERDUnit(
@@ -296,6 +318,7 @@ def build_model(
             default_costing_package_kwargs={
                 "costing_method_arguments": {"ro_type": "high_pressure"}
             },
+            target_recovery=0.4,
         )
         m.fs.product_mixer = MixerPhUnit(
             default_property_package=m.fs.properties,
@@ -367,6 +390,7 @@ def build_model(
     TransformationFactory("network.expand_arcs").apply_to(m)
     add_global_constraints(m)
     fix_and_scale(m)
+    scu.scale_costing_block(m.fs.costing)
     add_perfoance_tracking_vars(m)
     return m
 
@@ -464,21 +488,21 @@ def fix_and_scale(m):
     assert degrees_of_freedom(m) == 0
 
 
-def initialize(m, **kwargs):
+def initialize(m, linear_solver="mumps", **kwargs):
     for unit in m.flowsheet_unit_order:
         unit.initialize()
     m.fs.costing.initialize()
     # report_all_units(m)
-    solve_model(m)
+    solve_model(m, linear_solver=linear_solver)
     set_optimization(m)
 
     if m.fs.water_recovery.value < 0.5:
         m.fs.water_recovery.fix()
-        solve_model(m)
+        solve_model(m, linear_solver=linear_solver)
         m.fs.water_recovery.fix(0.5)
     else:
         m.fs.water_recovery.fix()
-    solve_model(m)
+    solve_model(m, linear_solver=linear_solver)
     print("--------------Initialization complete--------")
 
 
@@ -546,6 +570,12 @@ def solve_model(m, tee=True, linear_solver="mumps", **kwargs):
                 key, 0
             )
         m.fs.ipopt_iterations["Number of iterations"] = int(parsed_output["iters"])
+    if tee:
+        print("------vars_close_to_bound-tests---------")
+        print_variables_close_to_bounds(m)
+        print("------constraints_close_to_bound-tests---------")
+        print_constraints_close_to_bounds(m)
+
     assert_optimal_termination(result)
     return result
 

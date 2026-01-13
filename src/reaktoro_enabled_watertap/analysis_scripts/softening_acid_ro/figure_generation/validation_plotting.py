@@ -290,11 +290,11 @@ if __name__ == "__main__":
             if acid == "H2SO4":
                 val_y = (
                     val_y / 0.93
-                )  # Amusat reports pure acid dose, while we report dose based actual purity
+                )  # Amusat reports pure acid dose, while we report dose based on purity
             if acid == "HCl":
                 val_y = (
                     val_y / 0.3
-                )  # Amusat reports pure acid dose, while we report dose based actual purity
+                )  # Amusat reports pure acid dose, while we report dose based on purity
             if case == "Seawater":
                 yticks = [0, 20, 40, 60, 80, 100]
             else:

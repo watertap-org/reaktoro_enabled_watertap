@@ -17,6 +17,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 
 from pyomo.environ import (
     Var,
+    value,
     units as pyunits,
 )
 from pyomo.common.config import ConfigValue
@@ -26,6 +27,7 @@ from idaes.core import (
 )
 from idaes.core import UnitModelCostingBlock
 
+from reaktoro_enabled_watertap.utils import scale_utils as scu
 import idaes.core.util.scaling as iscale
 
 
@@ -100,10 +102,20 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
         )
 
     def scale_before_initialization(self, **kwargs):
+        h2o_scale = self.config.default_property_package._default_scaling_factors[
+            "flow_mol_phase_comp", ("Liq", "H2O")
+        ] / value(self.config.default_property_package.mw_comp["H2O"])
+        work_scale = 1e-5 / (1 / h2o_scale)
         iscale.set_scaling_factor(self.ERD.inlet.pressure, 1e-5)
         iscale.set_scaling_factor(self.ERD.outlet.pressure, 1e-5)
-        iscale.set_scaling_factor(self.ERD.control_volume.work, 1e-4)
+        iscale.set_scaling_factor(self.ERD.control_volume.work, work_scale)
         iscale.set_scaling_factor(self.ERD.pH, 1)
+        if self.config.default_costing_package is not None:
+            scu.calculate_scale_from_dependent_vars(
+                self.ERD.costing.capital_cost,
+                self.ERD.costing.capital_cost_constraint,
+                [self.ERD.control_volume.work[0]],
+            )
         if self.config.track_pE:
             iscale.set_scaling_factor(self.ERD.pE, 1)
 

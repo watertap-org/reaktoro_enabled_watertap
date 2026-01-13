@@ -1,4 +1,4 @@
-flow_mass: 1
+volumetric_flowrate: 1
 pH: 7.2
 solute_list:
   Ca_2+:

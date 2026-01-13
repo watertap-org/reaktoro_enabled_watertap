@@ -38,6 +38,8 @@ import idaes.core.util.scaling as iscale
 from watertap.unit_models.stoichiometric_reactor import (
     StoichiometricReactor,
 )
+
+from reaktoro_enabled_watertap.utils import scale_utils as scu
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from collections import OrderedDict
 
@@ -272,6 +274,10 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
 
     def scale_before_initialization(self, **kwargs):
         dose_scale = 1 / 0.001  # step size of ppm (or 0.001 kg/m3)
+
+        feed_mass_scale = self.config.default_property_package._default_scaling_factors[
+            "flow_mol_phase_comp", ("Liq", "H2O")
+        ] / value(self.config.default_property_package.mw_comp["H2O"])
         for reagent, options in self.selected_reagents.items():
             # use mol flow, as thats what will be propagated by default via mcas
             mass_flow_scale = dose_scale / (
@@ -290,12 +296,37 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
                 self.chemical_reactor.flow_mol_reagent[reagent],
                 mol_scale,
             )
+            vol_scale = 1 / (
+                (1 / mass_flow_scale)
+                / self.chemical_reactor.density_reagent[reagent].value
+            )
+            iscale.set_scaling_factor(
+                self.chemical_reactor.flow_vol_reagent[reagent],
+                vol_scale,
+            )
             iscale.set_scaling_factor(
                 self.chemical_reactor.flow_mass_reagent[reagent],
                 mass_flow_scale,
             )
             iscale.set_scaling_factor(
                 self.chemical_reactor.reagent_dose[reagent], dose_scale
+            )
+
+        if self.config.default_costing_package is not None:
+            if self.config.default_costing_package_kwargs is not {}:
+                flow_type = [
+                    self.chemical_reactor.flow_vol_reagent[d]
+                    for d in self.selected_reagents
+                ]
+            else:
+                flow_type = [
+                    self.chemical_reactor.flow_mass_reagent[d]
+                    for d in self.selected_reagents
+                ]
+            scu.calculate_scale_from_dependent_vars(
+                self.chemical_reactor.costing.capital_cost,
+                self.chemical_reactor.costing.capital_cost_constraint,
+                flow_type,
             )
         if self.chemical_reactor.find_component("pE") is not None:
             iscale.set_scaling_factor(self.chemical_reactor.pE, 1)
@@ -358,6 +389,7 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
                 get_pe("inlet"),
             ),
             "Chemical dosing:": self.chemical_reactor.reagent_dose,
+            "Chemical flow  volume:": self.chemical_reactor.flow_vol_reagent,
             "Chemical mass flow:": self.chemical_reactor.flow_mass_reagent,
             "Treated state": treated_state,
         }

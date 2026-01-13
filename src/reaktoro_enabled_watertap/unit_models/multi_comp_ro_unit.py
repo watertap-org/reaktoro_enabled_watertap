@@ -26,6 +26,7 @@ from pyomo.environ import (
     Var,
     value,
     Constraint,
+    Objective,
     units as pyunits,
 )
 from pyomo.common.config import ConfigValue
@@ -46,6 +47,8 @@ from idaes.core.util.initialization import fix_state_vars, revert_state_vars
 from idaes.models.unit_models import (
     Translator,
 )
+from reaktoro_enabled_watertap.utils import scale_utils as scu
+
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from pyomo.network import Arc
 
@@ -165,6 +168,26 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             description="if pE should be tracked in the model",
             doc="""
                     Providing True will add pE variable to the model and track it
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "target_recovery",
+        ConfigValue(
+            default=0.25,
+            description="Target recovery for RO stage during initialization",
+            doc="""
+            Sets a target recovery for RO stage during initialization
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "target_inlet_velocity",
+        ConfigValue(
+            default=0.15,
+            description="Target inlet velocity for RO stage during initialization",
+            doc="""
+            Sets a target inlet velocity for RO stage during initialization
             """,
         ),
     )
@@ -480,7 +503,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
     def build_water_removal_constraint(self):
         """builds water removal constraint"""
         self.ro_unit.water_removed_at_interface = Var(
-            initialize=1, units=pyunits.mol / pyunits.s
+            initialize=1, bounds=(1e-8, None), units=pyunits.mol / pyunits.s
         )
 
         ro_cp_interface = self.ro_unit.feed_side.properties_interface[0, 1]
@@ -497,7 +520,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         )
         if self.config.use_bulkcomp_for_effluent_pH:
             self.ro_unit.water_removed_in_feed = Var(
-                initialize=1, units=pyunits.mol / pyunits.s
+                initialize=1, bounds=(1e-8, None), units=pyunits.mol / pyunits.s
             )
             self.ro_unit.eq_water_removed_in_feed = Constraint(
                 expr=(
@@ -610,41 +633,55 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.feed_side.spacer_porosity.fix(0.9)
         self.ro_unit.permeate.pressure[0].fix(101325)
 
-        self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.05)
+        self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.03)
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.98)
         self.ro_unit.feed_side.velocity[0, 0].fix(0.1)
-
         for d in list(self.ro_unit.length_domain):
             self.ro_unit.feed_side.velocity[0, d].setub(0.3)
-            self.ro_unit.feed_side.velocity[0, d].setlb(0.0001)
+            self.ro_unit.feed_side.velocity[0, d].setlb(0.01)
 
         # Deal with low flows
         self.ro_unit.feed_side.cp_modulus.setub(50)
         self.ro_unit.feed_side.cp_modulus.setlb(0.0)
         # Deals with low feed salinity
+
         self.ro_unit.feed_side.K.setlb(1e-6)
         self.ro_unit.feed_side.friction_factor_darcy.setub(200)
+        self.ro_unit.recovery_objective = Objective(
+            expr=(
+                self.config.target_inlet_velocity
+                - self.ro_unit.feed_side.velocity[0, 0]
+            )
+            ** 2
+            + (
+                self.config.target_recovery
+                - self.ro_unit.recovery_vol_phase[0.0, "Liq"]
+            )
+            ** 2,
+        )
+        self.ro_unit.recovery_objective.deactivate()
 
     def set_optimization_operation(self):
         """unfixes operation for optimization"""
         self.ro_unit.area.unfix()
         self.ro_unit.width.unfix()
         self.ro_unit.length.unfix()
-        self.ro_unit.width.setub(None)
-        self.ro_unit.length.setub(None)
+        self.ro_unit.width.setub(1e6)
+        self.ro_unit.length.setub(1e3)
         self.ro_unit.area.setlb(1)
         self.ro_unit.width.setlb(0.1)
         self.ro_unit.length.setlb(0.1)
         self.ro_unit.feed_side.velocity[0, 0].unfix()
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].unfix()
-        self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.2)
+        self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.3)
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.95)
+
         self.activate_scaling_constraints()
-        # set min flux to be greater then 5 LMH
+        # set min flux to be greater then 1 LMH
         for phase in self.ro_unit.flux_mass_phase_comp:
             if "H2O" in phase:
                 self.ro_unit.flux_mass_phase_comp[phase].setlb(
-                    5 * pyunits.kg / (pyunits.m**2 * pyunits.hr)
+                    0.5 * pyunits.kg / (pyunits.m**2 * pyunits.hr)
                 )
                 self.ro_unit.flux_mass_phase_comp[phase].setub(
                     100 * pyunits.kg / (pyunits.m**2 * pyunits.hr)
@@ -742,20 +779,33 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
                     self.ro_unit.maximum_scaling_tendency[scalant], sf
                 )
                 iscale.constraint_scaling_transform(
-                    self.ro_unit.eq_max_scaling_tendency[scalant], sf
+                    self.ro_unit.eq_max_scaling_tendency[scalant],
+                    sf,  # don't need to satisfy this to high tolerance (~1e-5 is good enough!)
                 )
             if self.config.add_alkalinity:
                 iscale.set_scaling_factor(self.ro_unit.interface_alkalinity, 1)
             if self.config.add_alkalinity and self.config.use_bulkcomp_for_effluent_pH:
                 iscale.set_scaling_factor(self.ro_unit.alkalinity, 1)
         # scale RO unit
-        iscale.set_scaling_factor(self.ro_unit.area, 1 / self.ro_unit.area.value)
-        iscale.constraint_scaling_transform(
-            self.ro_unit.eq_area, 1 / self.ro_unit.area.value
-        )
-        iscale.set_scaling_factor(self.ro_unit.width, 1 / self.ro_unit.width.value)
-        iscale.set_scaling_factor(self.ro_unit.length, 1 / self.ro_unit.length.value)
-
+        h2o_rate = 1 / prop_scaling["H2O"]
+        area_scale = 1 / (
+            h2o_rate * 3600 * 0.5 / 50
+        )  # kg/s 50 LMH assume ~50 % recovery
+        iscale.set_scaling_factor(self.ro_unit.area, area_scale)
+        iscale.constraint_scaling_transform(self.ro_unit.eq_area, area_scale)
+        iscale.set_scaling_factor(self.ro_unit.width, area_scale**0.5)
+        iscale.set_scaling_factor(self.ro_unit.length, 1)
+        if self.config.default_costing_package is not None:
+            scu.calculate_scale_from_dependent_vars(
+                self.ro_unit.costing.capital_cost,
+                self.ro_unit.costing.capital_cost_constraint,
+                [self.ro_unit.area],
+            )
+            scu.calculate_scale_from_dependent_vars(
+                self.ro_unit.costing.fixed_operating_cost,
+                self.ro_unit.costing.fixed_operating_cost_constraint,
+                [self.ro_unit.area],
+            )
         if (
             self.config.use_bulkcomp_for_effluent_pH == False
             and self.config.use_interfacecomp_for_effluent_pH
@@ -792,13 +842,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
     def init_translator_block(self, block, additonal_var_to_fix=None):
         """initializes translator block"""
-        # block.initialize()
         if additonal_var_to_fix is not None:
             if not isinstance(additonal_var_to_fix, list):
                 additonal_var_to_fix = [additonal_var_to_fix]
             for var in additonal_var_to_fix:
                 var.fix()
-        # block.initialize()
         flags = fix_state_vars(block.properties_in)
         solver = get_solver()
         results = solver.solve(block, tee=False)
@@ -808,10 +856,24 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             for var in additonal_var_to_fix:
                 var.unfix()
 
+    def init_ro_unit(self, ro_unit):
+        ro_unit.area.unfix()
+        ro_unit.feed_side.velocity[0, 0].unfix()
+        ro_unit.recovery_objective.activate()
+        ro_unit.initialize(initialization_degrees_of_freedom=2)
+        ro_unit.area.fix()
+        ro_unit.feed_side.velocity[0, 0].fix()
+        print(
+            "initialized recovery",
+            ro_unit.recovery_vol_phase[0.0, "Liq"].value,
+            ro_unit.feed_side.velocity[0, 0].value,
+        )
+        ro_unit.recovery_objective.deactivate()
+
     def initialize_unit(self):
         self.init_translator_block(self.ro_feed)
         propagate_state(self.feed_to_ro)
-        self.ro_unit.initialize()
+        self.init_ro_unit(self.ro_unit)
         propagate_state(self.ro_to_product)
         propagate_state(self.ro_to_retentate)
         self.ro_feed.properties_in[
@@ -865,6 +927,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
                     to_units=pyunits.kg / (pyunits.m**2 * pyunits.hr),
                 ),
                 "Inlet velocity": self.ro_unit.feed_side.velocity[0, 0],
+                "Outlet velocity": self.ro_unit.feed_side.velocity[0, 1],
                 "Recovery": self.ro_unit.recovery_vol_phase[0.0, "Liq"],
                 "Rejection": self.ro_unit.rejection_phase_comp[
                     0, "Liq", self.ro_solute_type

@@ -6,6 +6,10 @@ treatment_sweep:
     acidification_reagents: 
       - 'HCl'
       - 'H2SO4'
+    feed_flow_rate:
+      value: 5000
+      units: 'm**3/day'      
+    softening_and_acid_costing: 'default'
   build_loop:
     water_sim_cases:
       BGW_1500:

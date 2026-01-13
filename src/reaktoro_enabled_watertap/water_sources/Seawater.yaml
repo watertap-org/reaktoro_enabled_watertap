@@ -45,4 +45,4 @@ solute_list:
     stokes_radius (m): 2.06e-10
     elemental charge: -1
 pH: 7.56
-flow_mass: 1 
+volumetric_flowrate: 1
