@@ -19,27 +19,12 @@ __author__ = "Alexander V. Dudchenko"
 
 
 def solve_with_ma27(m, tee=False, **kwargs):
-    result = sar.solve_model(m, tee=tee, linear_solver="ma27")
+    result = sar.solve_model(m, tee=tee, linear_solver="mumps")
     return result
 
 
 def initialize_ma27(m, **kwargs):
-    for unit in m.flowsheet_unit_order:
-        unit.initialize()
-    m.fs.costing.initialize()
-    # report_all_units(m)
-    solve_with_ma27(m)
-    sar.set_optimization(m)
-
-    if m.fs.water_recovery.value < 0.5:
-        m.fs.water_recovery.fix()
-        solve_with_ma27(m)
-        m.fs.water_recovery.fix(0.5)
-    else:
-        m.fs.water_recovery.fix()
-    solve_with_ma27(m)
-
-    print("--------------Initialization complete--------")
+    sar.initialize(m, linear_solver="mumps", tee=False)
 
 
 def main(save_location=None, config_location=None):

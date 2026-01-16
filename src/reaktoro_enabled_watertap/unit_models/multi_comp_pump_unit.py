@@ -104,7 +104,8 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         self.pump = Pump(property_package=self.config.default_property_package)
         if self.config.default_costing_package is not None:
             self.pump.costing = UnitModelCostingBlock(
-                flowsheet_costing_block=self.config.default_costing_package
+                flowsheet_costing_block=self.config.default_costing_package,
+                **self.config.default_costing_package_kwargs,
             )
         # Add pump flow rate
         self.pump.control_volume.properties_in[0].flow_vol_phase[...]
@@ -160,6 +161,10 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         iscale.set_scaling_factor(self.pump.control_volume.work, work_scale)
         iscale.set_scaling_factor(self.pump.pH, 1 / 10)
         if self.config.default_costing_package is not None:
+            iscale.set_scaling_factor(
+                self.config.default_costing_package.energy_recovery_device.pressure_exchanger_cost,
+                1 / 100,
+            )
             scu.calculate_scale_from_dependent_vars(
                 self.pump.costing.capital_cost,
                 self.pump.costing.capital_cost_constraint,

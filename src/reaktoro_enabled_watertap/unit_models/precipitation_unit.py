@@ -252,6 +252,7 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
                 # mutable=True,
                 domain=Reals,
             )
+
             for reagent, reagent_config in self.selected_reagents.items():
                 self.precipitation_reactor.reagent_cost[reagent].fix(
                     reagent_config["cost"]
@@ -575,8 +576,10 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
             )
 
     def set_fixed_operation(self):
+
+        initial_dose = 10 / 1000 / len(self.selected_reagents)  # 10 ppm
         for reagent, options in self.selected_reagents.items():
-            self.precipitation_reactor.reagent_dose[reagent].fix(10 / 1000)
+            self.precipitation_reactor.reagent_dose[reagent].fix(initial_dose)
             if options["max_dose"] is not None:
                 self.precipitation_reactor.reagent_dose[reagent].setub(
                     options["max_dose"] / 1000
@@ -597,7 +600,7 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
             ].setlb(None)
             self.precipitation_reactor.separator.waste_state[0.0].flow_mol_phase_comp[
                 phase, ion
-            ].setlb(0)
+            ].setlb(None)
         for precip in self.selected_precipitants.keys():
             self.precipitation_reactor.flow_mol_precipitate[precip].setlb(0)
             self.precipitation_reactor.flow_mass_precipitate[precip].setlb(None)
@@ -725,7 +728,10 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
                     for d in self.selected_reagents
                 ],
             )
-
+            for reagent in self.precipitation_reactor.reagent_cost:
+                iscale.set_scaling_factor(
+                    self.precipitation_reactor.reagent_cost[reagent], 10
+                )
         iscale.set_scaling_factor(self.precipitation_reactor.pH, 1)
         if self.config.track_pE:
             iscale.set_scaling_factor(self.precipitation_reactor.pE, 1)

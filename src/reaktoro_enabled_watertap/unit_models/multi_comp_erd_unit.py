@@ -37,7 +37,7 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
     CONFIG.declare(
         "erd_efficiency",
         ConfigValue(
-            default=0.9,
+            default=0.8,
             description="default energy recovery device efficiency",
             doc="""
             default energy recovery device efficiency

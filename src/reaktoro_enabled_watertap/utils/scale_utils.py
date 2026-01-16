@@ -36,8 +36,18 @@ def calculate_scale_from_dependent_vars(var, constraint, dependent_vars):
     # Use the average of the scales of the dependent variables as a basis
     # print("Applying scale to ", var.name, constraint.name, "of", 1 / scale_var)
     scale = 1 / scale_var
-    iscale.set_scaling_factor(var, scale)
-    iscale.constraint_scaling_transform(constraint, scale)
+    if iscale.get_scaling_factor(var) is None:
+        iscale.set_scaling_factor(var, scale)
+    else:
+        print("Skiping, as scaling far already existsf for ", var.name)
+    if iscale.get_constraint_transform_applied_scaling_factor(constraint) is None:
+        iscale.constraint_scaling_transform(constraint, scale)
+    else:
+        print(
+            "Skiping, as scaling far already existsf for ",
+            var.name,
+            iscale.get_constraint_transform_applied_scaling_factor(constraint),
+        )
     for v, (initial_values, fixed_states) in zip(
         dependent_vars, zip(initial_values, fixed_states)
     ):
@@ -92,8 +102,8 @@ def scale_costing_block(costing_block):
     operating_costing_factor = 0
     variable_costing_factor = 0
     flow_cost_types = {}
+    flow_costs = {}
     for unit in costing_block._registered_unit_costing:
-        print(unit)
         if hasattr(unit, "capital_cost"):
             capital_costing_factor += iscale.get_scaling_factor(unit.capital_cost)
         if hasattr(unit, "fixed_operating_cost"):
@@ -107,12 +117,18 @@ def scale_costing_block(costing_block):
     for ftype in costing_block.used_flows:
         flow_cost_types[ftype] = 0
         for flow in costing_block._registered_flows[ftype]:
-            var_list = []
-            scale = get_scale_from_expr(flow)
+            if flow.is_variable_type():
+                scale = iscale.get_scaling_factor(flow)
+            else:
+                scale = get_scale_from_expr(flow)
             flow_cost_types[ftype] += scale
-            # print(" flow ", flow, scale)
-        # cost_var = getattr(costing_block, f"{ftype}_cost")
-        # print("  ", cost_var, str(cost_var))
+        cost_value = getattr(costing_block, f"{ftype}_cost")
+        cost_scale = iscale.get_scaling_factor(cost_value)
+        if cost_scale is None:
+            cost_scale = 1 / value(cost_value)
+            iscale.set_scaling_factor(cost_value, cost_scale)
+        flow_costs[ftype] = cost_scale
+
     print("Capital cost scaling factor: ", capital_costing_factor)
     print("Operating cost scaling factor: ", operating_costing_factor)
     print("Variable cost scaling factor: ", variable_costing_factor)
@@ -124,7 +140,19 @@ def scale_costing_block(costing_block):
     if variable_costing_factor == 0:
         variable_costing_factor = 1
 
-    iscale.set_scaling_factor(costing_block.electricity_cost, 1)
+    # iscale.set_scaling_factor(costing_block.electricity_cost, 100)
+
+    iscale.set_scaling_factor(costing_block.utilization_factor, 1)
+    iscale.set_scaling_factor(costing_block.maintenance_labor_chemical_factor, 100)
+
+    iscale.set_scaling_factor(costing_block.total_investment_factor, 1)
+    iscale.set_scaling_factor(costing_block.plant_lifetime, 1)
+    iscale.set_scaling_factor(costing_block.wacc, 10)
+
+    iscale.set_scaling_factor(costing_block.capital_recovery_factor, 10)
+    iscale.set_scaling_factor(costing_block.TPEC, 1)
+
+    iscale.set_scaling_factor(costing_block.TIC, 1)
     # total capital costs
     iscale.set_scaling_factor(
         costing_block.aggregate_capital_cost, capital_costing_factor
@@ -162,9 +190,23 @@ def scale_costing_block(costing_block):
         variable_costing_factor,
     )
     for ftype, scale in flow_cost_types.items():
-        iscale.set_scaling_factor(costing_block.aggregate_flow_costs[ftype], scale)
+        if "electricity" in ftype:
+            mc = 1
+        else:
+            # this assume our mass flow is based on seconds! This needs to be refined!
+            mc = 1 / 3.15576e7
+        iscale.set_scaling_factor(
+            costing_block.aggregate_flow_costs[ftype],
+            scale * flow_costs[ftype] * mc,
+        )
 
         iscale.constraint_scaling_transform(
             costing_block.aggregate_flow_costs_constraint[ftype],
-            scale,
+            scale * flow_costs[ftype] * mc,
         )
+        agg_flow_cost = costing_block.find_component(f"aggregate_flow_{ftype}")
+        agg_flow_constraint = costing_block.find_component(
+            f"aggregate_flow_{ftype}_constraint"
+        )
+        iscale.set_scaling_factor(agg_flow_cost, scale)
+        iscale.constraint_scaling_transform(agg_flow_constraint, scale)

@@ -618,8 +618,8 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         """fixes operation point for pump unit model"""
         self.ro_unit = self.ro_unit
         # Default membrane performance metrics
-        self.ro_unit.A_comp[0, "H2O"].fix(2 / (3600 * 1000 * 1e5))
-        self.ro_unit.B_comp[0, self.ro_solute_type].fix(0.15 / (3600 * 1000))
+        self.ro_unit.A_comp[0, "H2O"].fix(1.51 / (3600 * 1000 * 1e5))
+        self.ro_unit.B_comp[0, self.ro_solute_type].fix(0.126 / (3600 * 1000))
 
         # Default module design metrics
         self.ro_unit.area.fix(100)
@@ -630,14 +630,14 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
         # module design
         self.ro_unit.feed_side.channel_height.fix(1 / 10 / 100)
-        self.ro_unit.feed_side.spacer_porosity.fix(0.9)
+        self.ro_unit.feed_side.spacer_porosity.fix(0.85)
         self.ro_unit.permeate.pressure[0].fix(101325)
 
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.03)
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.98)
         self.ro_unit.feed_side.velocity[0, 0].fix(0.1)
         for d in list(self.ro_unit.length_domain):
-            self.ro_unit.feed_side.velocity[0, d].setub(0.3)
+            self.ro_unit.feed_side.velocity[0, d].setub(0.25)
             self.ro_unit.feed_side.velocity[0, d].setlb(0.01)
 
         # Deal with low flows
@@ -673,9 +673,19 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.length.setlb(0.1)
         self.ro_unit.feed_side.velocity[0, 0].unfix()
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].unfix()
-        self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.3)
+        self.ro_unit.recovery_vol_phase[0.0, "Liq"].setlb(0.25)
         self.ro_unit.recovery_vol_phase[0.0, "Liq"].setub(0.95)
-
+        self.ro_unit.rejection_phase_comp[0, "Liq", self.ro_solute_type].setlb(0.98)
+        # self.ro_unit.rejection_constraint = Constraint(
+        #     expr=self.ro_unit.rejection_phase_comp[0, "Liq", self.ro_solute_type]
+        #     >= 0.98
+        # )
+        iscale.set_scaling_factor(
+            self.ro_unit.rejection_phase_comp[0, "Liq", self.ro_solute_type], 0.01
+        )
+        iscale.constraint_scaling_transform(
+            self.ro_unit.eq_rejection_phase_comp[0, self.ro_solute_type], 0.01
+        )
         self.activate_scaling_constraints()
         # set min flux to be greater then 1 LMH
         for phase in self.ro_unit.flux_mass_phase_comp:
@@ -780,7 +790,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
                 )
                 iscale.constraint_scaling_transform(
                     self.ro_unit.eq_max_scaling_tendency[scalant],
-                    sf,  # don't need to satisfy this to high tolerance (~1e-5 is good enough!)
+                    sf,
                 )
             if self.config.add_alkalinity:
                 iscale.set_scaling_factor(self.ro_unit.interface_alkalinity, 1)
@@ -789,13 +799,25 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         # scale RO unit
         h2o_rate = 1 / prop_scaling["H2O"]
         area_scale = 1 / (
-            h2o_rate * 3600 * 0.5 / 50
-        )  # kg/s 50 LMH assume ~50 % recovery
+            h2o_rate * 3600 * 0.5 / 25
+        )  # kg/s 25 LMH assume ~10 % recovery
         iscale.set_scaling_factor(self.ro_unit.area, area_scale)
         iscale.constraint_scaling_transform(self.ro_unit.eq_area, area_scale)
-        iscale.set_scaling_factor(self.ro_unit.width, area_scale**0.5)
+        iscale.set_scaling_factor(self.ro_unit.width, area_scale / 10)
         iscale.set_scaling_factor(self.ro_unit.length, 1)
         if self.config.default_costing_package is not None:
+            iscale.set_scaling_factor(
+                self.config.default_costing_package.reverse_osmosis.factor_membrane_replacement,
+                1,
+            )
+            iscale.set_scaling_factor(
+                self.config.default_costing_package.reverse_osmosis.membrane_cost,
+                1 / 10,
+            )
+            iscale.set_scaling_factor(
+                self.config.default_costing_package.reverse_osmosis.high_pressure_membrane_cost,
+                1 / 10,
+            )
             scu.calculate_scale_from_dependent_vars(
                 self.ro_unit.costing.capital_cost,
                 self.ro_unit.costing.capital_cost_constraint,
@@ -863,11 +885,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         ro_unit.initialize(initialization_degrees_of_freedom=2)
         ro_unit.area.fix()
         ro_unit.feed_side.velocity[0, 0].fix()
-        print(
-            "initialized recovery",
-            ro_unit.recovery_vol_phase[0.0, "Liq"].value,
-            ro_unit.feed_side.velocity[0, 0].value,
-        )
+        # print(
+        #     "initialized recovery",
+        #     ro_unit.recovery_vol_phase[0.0, "Liq"].value,
+        #     ro_unit.feed_side.velocity[0, 0].value,
+        # )
         ro_unit.recovery_objective.deactivate()
 
     def initialize_unit(self):

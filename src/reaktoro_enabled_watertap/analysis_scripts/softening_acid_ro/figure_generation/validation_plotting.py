@@ -298,7 +298,7 @@ if __name__ == "__main__":
             if case == "Seawater":
                 yticks = [0, 20, 40, 60, 80, 100]
             else:
-                yticks = [0, 50, 100, 150, 200, 250, 300]
+                yticks = [0, 100, 200, 300, 400]
             fig.plot_line(
                 x,
                 y,
@@ -435,3 +435,4 @@ if __name__ == "__main__":
             ylabel="Scaling Tendency (Gypsum)",
             yticks=yticks,
         )
+        fig.show()

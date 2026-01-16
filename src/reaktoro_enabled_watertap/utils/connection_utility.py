@@ -41,7 +41,6 @@ class PortContainer:
         """connect current port to provided port, registering
         the generated connection container using provided function"""
         connection = ConnectionContainer(self, inlet)
-        print(inlet, connection)
         self.unit_block_reference.register_outlet_connection(connection)
 
     def fix(self):
@@ -161,7 +160,6 @@ class ConnectionContainer:
 
     def propagate(self):
         """this should prop any arcs and also ensure all equality constraints are satisfied"""
-        print(self.registered_arc.name)
         propagate_state(self.registered_arc)
         self.propagate_equality_constraints()
 

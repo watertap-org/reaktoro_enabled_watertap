@@ -21,6 +21,13 @@ from watertap.costing.util import (
     make_capital_cost_var,
 )
 
+import idaes.core.util.scaling as iscale
+
+##################################################################
+# Costing from Amusat et al. (2024) "Cost-optimal selection of pH control for mineral scaling
+# prevention in high recovery reverse osmosis desalination"
+##################################################################
+
 
 def build_stoichiometric_reactor_cost_param_block(blk):
     blk.capital_cost_softening = Param(
@@ -64,7 +71,9 @@ def cost_stoichiometric_reactor(blk):
             == blk.cost_factor
             * blk.capital_cost_softening["const"]
             * mass_softening_reagents ** blk.capital_cost_softening["exp"],
-        )
+        )  # 1e1 stable for validation
+        # iscale.set_scaling_factor(blk.capital_cost, 1 / 1e1)
+        # iscale.constraint_scaling_transform(blk.capital_cost_constraint, 1 / 1e1)
     # if acid addition reactor
     elif blk.unit_model.has_dissolution_reaction:
         volume_acid = sum(
@@ -76,7 +85,59 @@ def cost_stoichiometric_reactor(blk):
         )
         blk.capital_cost_constraint = Constraint(
             expr=blk.capital_cost
-            == blk.cost_factor * blk.capital_cost_acid_addition["a"] * volume_acid**2
-            + blk.capital_cost_acid_addition["b"] * volume_acid
-            + blk.capital_cost_acid_addition["c"],
+            == blk.cost_factor
+            * (
+                blk.capital_cost_acid_addition["a"] * volume_acid**2
+                + blk.capital_cost_acid_addition["b"] * volume_acid
+                + blk.capital_cost_acid_addition["c"]
+            ),
         )
+        # # 1e4 stable for validation
+        # iscale.set_scaling_factor(blk.capital_cost, 1 / 1e4)
+        # iscale.constraint_scaling_transform(blk.capital_cost_constraint, 1 / 1e4)
+
+
+def build_high_pressure_pump_cost_param_block(blk):
+
+    blk.pump_cost = Param(
+        initialize=700,
+        mutable=True,
+        doc="High pressure pump cost",
+        units=pyunits.USD_2018 / pyunits.kW,
+    )
+
+
+def cost_high_pressure_pump(blk, cost_electricity_flow=True):
+    """
+    High pressure pump costing method
+
+    `TODO: describe equations`
+
+    Args:
+        cost_electricity_flow (bool): if True, the Pump's work_mechanical will
+            be converted to kW and costed as an electricity. Defaults to True.
+    """
+    t0 = blk.flowsheet().time.first()
+    make_capital_cost_var(blk)
+    build_high_pressure_pump_cost_param_block(blk)
+    blk.costing_package.add_cost_factor(blk, "TIC")
+    blk.capital_cost_constraint = Constraint(
+        expr=blk.capital_cost
+        == blk.cost_factor
+        * pyunits.convert(
+            blk.pump_cost
+            * pyunits.convert(blk.unit_model.work_mechanical[t0], pyunits.W),
+            to_units=blk.costing_package.base_currency,
+        )
+    )
+    if cost_electricity_flow:
+        # grab lower bound of mechanical work
+        lb = blk.unit_model.work_mechanical[t0].lb
+        # set lower bound to 0 to avoid negative defined flow warning when lb is not >= 0
+        blk.unit_model.work_mechanical.setlb(0)
+        blk.costing_package.cost_flow(
+            pyunits.convert(blk.unit_model.work_mechanical[t0], to_units=pyunits.kW),
+            "electricity",
+        )
+        # set lower bound back to its original value that was assigned to lb
+        blk.unit_model.work_mechanical.setlb(lb)

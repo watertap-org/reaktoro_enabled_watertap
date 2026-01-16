@@ -255,8 +255,9 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
 
     def set_fixed_operation(self):
         """fixes operation point for chemical addition unit model"""
+        initial_dose = 10 / 1000 / len(self.selected_reagents)  # 10 ppm
         for reagent, _ in self.selected_reagents.items():
-            self.chemical_reactor.reagent_dose[reagent].fix(10 / 1000)
+            self.chemical_reactor.reagent_dose[reagent].fix(initial_dose)
         for reagent, options in self.selected_reagents.items():
             self.chemical_reactor.reagent_dose[reagent].setlb(
                 options["min_dose"] / 1000
@@ -275,9 +276,6 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
     def scale_before_initialization(self, **kwargs):
         dose_scale = 1 / 0.001  # step size of ppm (or 0.001 kg/m3)
 
-        feed_mass_scale = self.config.default_property_package._default_scaling_factors[
-            "flow_mol_phase_comp", ("Liq", "H2O")
-        ] / value(self.config.default_property_package.mw_comp["H2O"])
         for reagent, options in self.selected_reagents.items():
             # use mol flow, as thats what will be propagated by default via mcas
             mass_flow_scale = dose_scale / (
@@ -323,11 +321,16 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
                     self.chemical_reactor.flow_mass_reagent[d]
                     for d in self.selected_reagents
                 ]
+
             scu.calculate_scale_from_dependent_vars(
                 self.chemical_reactor.costing.capital_cost,
                 self.chemical_reactor.costing.capital_cost_constraint,
                 flow_type,
             )
+            for reagent in self.chemical_reactor.reagent_cost:
+                iscale.set_scaling_factor(
+                    self.chemical_reactor.reagent_cost[reagent], 10
+                )
         if self.chemical_reactor.find_component("pE") is not None:
             iscale.set_scaling_factor(self.chemical_reactor.pE, 1)
         iscale.set_scaling_factor(self.chemical_reactor.pH, 1)

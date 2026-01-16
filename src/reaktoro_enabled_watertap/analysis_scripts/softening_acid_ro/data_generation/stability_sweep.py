@@ -14,44 +14,37 @@ from parameter_sweep.loop_tool.loop_tool import loopTool, get_working_dir
 import reaktoro_enabled_watertap.flowsheets.softening_acid_ro.softening_acid_ro as sar
 import time
 
+from reaktoro_enabled_watertap.utils.report_util import get_lib_path
+
 __author__ = "Alexander V. Dudchenko"
 
 
-def solve_with_ma27(m, tee=True, **kwargs):
+def solve_with_ma27(m, tee=False, **kwargs):
     result = sar.solve_model(m, tee=tee, linear_solver="ma27")
     return result
 
 
 def initialize_ma27(m, **kwargs):
-    for unit in m.flowsheet_unit_order:
-        unit.initialize()
-    m.fs.costing.initialize()
-    # report_all_units(m)
-    solve_with_ma27(m)
-    sar.set_optimization(m)
-
-    if m.fs.water_recovery.value < 0.5:
-        m.fs.water_recovery.fix()
-        solve_with_ma27(m)
-        m.fs.water_recovery.fix(0.5)
-    else:
-        m.fs.water_recovery.fix()
-    solve_with_ma27(m)
-    print("--------------Initialization complete--------")
+    sar.initialize(m, linear_solver="ma27", tee=False)
 
 
-def main():
-
+def main(save_location=None, config_location=None):
     ts = time.time()
-    cwd = get_working_dir()
+
+    work_path = get_lib_path()
+    work_path = str(work_path) + "/analysis_scripts/softening_acid_ro/data_generation"
+    if save_location is None:
+        save_location = work_path
+    if config_location is None:
+        config_location = work_path
     loopTool(
-        cwd + "/stability_sweep.yaml",
+        config_location + "/stability_sweep.yaml",
         build_function=sar.build_model,
-        initialize_function=sar.initialize,
+        initialize_function=initialize_ma27,
         optimize_function=solve_with_ma27,
         save_name="stability_sweep",
         probe_function=sar.test_func,
-        saving_dir=cwd,
+        saving_dir=save_location,
         number_of_subprocesses=1,
         num_loop_workers=3,
     )

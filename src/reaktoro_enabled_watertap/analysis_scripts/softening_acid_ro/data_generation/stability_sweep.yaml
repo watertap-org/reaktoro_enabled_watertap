@@ -8,7 +8,8 @@ stability_sweep:
       - 'H2SO4'
     feed_flow_rate:
       value: 5000
-      units: 'm**3/day'
+      units: 'm**3/day'    
+    system_costing: 'Amusat_et_al_2024'
   build_loop: 
     hessian_sim_cases:
       lmt_sc1:
