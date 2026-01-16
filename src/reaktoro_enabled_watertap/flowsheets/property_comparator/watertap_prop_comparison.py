@@ -43,36 +43,24 @@ from reaktoro_enabled_watertap.water_sources.source_water_importer import (
 
 
 def main():
-    m = build_modification_example("USDA_brackish.yaml")
-    starting_tds = m.fs.multicomp_feed.properties[0].total_dissolved_solids.value / 1000
-    for i, tds in enumerate(
-        np.linspace(
-            starting_tds,
-            100,
-            10,
-        )
-    ):
-        m.fs.feed_tds.fix(tds)
-        result = solve(m)
-        assert_optimal_termination(result)
-        if i == 0:
-            header = True
-        else:
-            header = False
-        print_comparison(m)
+    m = build_model("sample_1500_hardness.yaml")
+    m.fs.water_recovery.fix(0.1)
+    result = solve_model(m)
+    assert_optimal_termination(result)
+    print_comparison(m)
 
 
 def print_comparison(m):
     header = [
         "Temperature (K)",
         "TDS",
-        "MCAS_osmoticPressure (Pa)",
+        "Reaktoro_osmoticPressure (Pa)",
         "Seawater_osmoticPressure (Pa)",
         "NaCl_osmoticPressure( Pa)",
-        "MCAS_vaporPressure (Pa)",
+        "Reaktoro_vaporPressure (Pa)",
         "Seawater_vaporPressure (Pa)",
         "NaCl_vaporPressure (Pa)",
-        "MCAS_density (kg/m3)",
+        "Reaktoro_density (kg/m3)",
         "Seawater_density (kg/m3)",
         "NaCl_density (kg/m3)",
     ]
@@ -105,7 +93,7 @@ def print_comparison(m):
         print(f"{header}: {val}")
 
 
-def build_modification_example(water_case):
+def build_model(water_case):
 
     mcas_props, feed_specs = get_source_water_data(water_case)
     m = ConcreteModel()
@@ -130,7 +118,14 @@ def build_modification_example(water_case):
     m.fs.feed_pH.fix()
 
     set_feed_composition(m, feed_specs)
-
+    m.fs.water_recovery = Var(
+        initialize=1e-8,
+        units=pyunits.dimensionless,
+    )
+    m.fs.eq_water_recovery = Constraint(
+        expr=(1 - m.fs.water_recovery)
+        == m.fs.multicomp_feed.properties[0].flow_mass_phase_comp["Liq", "H2O"]
+    )
     # add global TDS constraint
     m.fs.feed_tds = Var(
         initialize=1e-8,
@@ -182,12 +177,9 @@ def build_modification_example(water_case):
     m.fs.seawater_feed.properties[0].flow_mass_phase_comp["Liq", "H2O"].unfix()
     print(degrees_of_freedom(m))
     assert degrees_of_freedom(m) == 0
-    result = solve(m)
-    m.fs.modified_properties.display()
-    m.fs.multicomp_feed.properties[0].display()
-    m.fs.seawater_feed.properties[0].display()
-    m.fs.nacl_feed.properties[0].display()
+    result = solve_model(m)
     assert_optimal_termination(result)
+    m.fs.feed_tds.unfix()
     return m
 
 
@@ -210,9 +202,11 @@ def set_feed_composition(m, feed_specs):
     )
     m.fs.multicomp_feed.properties[0].flow_mol_phase_comp["Liq", "H2O"].unfix()
     assert degrees_of_freedom(m.fs.multicomp_feed) == 0
-    result = solve(m.fs.multicomp_feed)
+    result = solve_model(m.fs.multicomp_feed)
+    scale_model(m)
+    assert degrees_of_freedom(m.fs.multicomp_feed) == 0
+    result = solve_model(m.fs.multicomp_feed)
     assert_optimal_termination(result)
-
     m.fs.nacl_feed.properties[0].flow_mass_phase_comp["Liq", "H2O"].fix(
         1 * pyunits.kg / pyunits.s
     )
@@ -229,21 +223,19 @@ def set_feed_composition(m, feed_specs):
         m.fs.multicomp_feed.properties[0].total_dissolved_solids
     )
     assert degrees_of_freedom(m.fs.seawater_feed) == 0
-    result = solve(m.fs.seawater_feed)
+    result = solve_model(m.fs.seawater_feed)
     assert_optimal_termination(result)
     assert degrees_of_freedom(m.fs.nacl_feed) == 0
-    result = solve(m.fs.nacl_feed)
+    result = solve_model(m.fs.nacl_feed)
     assert_optimal_termination(result)
 
     add_standard_properties(m)
 
-    scale_model(m)
     m.fs.eq_modified_properties.initialize()
     m.fs.modified_properties[("charge", None)].fix(0)
     assert degrees_of_freedom(m) == 0
-    result = solve(m)
+    result = solve_model(m)
     assert_optimal_termination(result)
-    m.fs.multicomp_feed.properties[0].display()
     print(
         "reconciled Cl concentration from:",
         m.fs.initial_neutral_ion,
@@ -302,35 +294,41 @@ def add_standard_properties(
 
     m.fs.modified_properties[("charge", None)].fix(0)
     m.fs.multicomp_feed.properties[0].eq_dens_mass_phase["Liq"].deactivate()
+    iscale.set_scaling_factor(m.fs.modified_properties[("charge", None)], 1e8)
 
 
 def scale_model(m):
 
-    iscale.set_scaling_factor(m.fs.modified_properties[("charge", None)], 1e8)
-
+    tds_scale = 0
     for idx in m.fs.multicomp_feed.properties[0].flow_mol_phase_comp:
         scale = 1 / m.fs.multicomp_feed.properties[0].flow_mol_phase_comp[idx].value
+        if "H2O" not in idx[1]:
+            tds_scale += (
+                m.fs.multicomp_feed.properties[0].flow_mass_phase_comp[idx].value
+            )
         m.fs.mcas_props.set_default_scaling("flow_mol_phase_comp", scale, index=idx)
-    for idx in m.fs.nacl_feed.properties[0].flow_mass_phase_comp:
-        scale = 1 / m.fs.nacl_feed.properties[0].flow_mass_phase_comp[idx].value
-        m.fs.nacl_props.set_default_scaling("flow_mass_phase_comp", scale, index=idx)
-    for idx in m.fs.seawater_feed.properties[0].flow_mass_phase_comp:
-        scale = 1 / m.fs.seawater_feed.properties[0].flow_mass_phase_comp[idx].value
-        m.fs.seawater_props.set_default_scaling(
-            "flow_mass_phase_comp", scale, index=idx
-        )
+    m.fs.nacl_props.set_default_scaling(
+        "flow_mass_phase_comp", (1 / (tds_scale / 1000)), index=("Liq", "NaCl")
+    )
+    m.fs.nacl_props.set_default_scaling("flow_mass_phase_comp", 1, index=("Liq", "H2O"))
+    m.fs.seawater_props.set_default_scaling(
+        "flow_mass_phase_comp", (1 / (tds_scale / 1000)), index=("Liq", "NaCl")
+    )
+    m.fs.seawater_props.set_default_scaling(
+        "flow_mass_phase_comp", 1, index=("Liq", "H2O")
+    )
     iscale.calculate_scaling_factors(m)
 
 
-def initialize(m):
+def initialize(m, **kwargs):
     calculate_variable_from_constraint(
         m.modified_properties_water_removal, m.eq_water_flow
     )
     m.eq_modified_properties.initialize()
-    solve(m)
+    solve_model(m)
 
 
-def solve(m):
+def solve_model(m, **kwargs):
     cy_solver = get_cyipopt_watertap_solver()  # get_solver(solver="cyipopt-watertap")
     result = cy_solver.solve(m, tee=True)
     return result

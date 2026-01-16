@@ -539,15 +539,18 @@ def test_func(m, **kwargs):
 
 def solve_model(m, tee=True, linear_solver="mumps", **kwargs):
     if linear_solver == "mumps":
-        pivtol = 1e-3
+        pivtol = 1e-5
+        maxpivtol = 1e-2
     else:
         pivtol = None
+        maxpivtol = None
     solver = get_cyipopt_watertap_solver(
         linear_solver=linear_solver,
         max_iter=1000,
         limited_memory=m.solver_limited_memory,
         scalar_type=m.solver_limited_memory_scalar,
         pivtol=pivtol,
+        pivtolmax=maxpivtol,
     )
     if m.fs.find_component("ipopt_iterations") is not None:
         tmp = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)

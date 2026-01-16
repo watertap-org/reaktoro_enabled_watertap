@@ -18,12 +18,12 @@ __author__ = "Alexander V. Dudchenko"
 
 
 def solve_with_ma27(m, tee=False, **kwargs):
-    result = sar.solve_model(m, tee=tee, linear_solver="ma27")
+    result = sar.solve_model(m, tee=tee, linear_solver="mumps")
     return result
 
 
 def initialize_ma27(m, **kwargs):
-    sar.initialize(m, linear_solver="ma27", tee=False)
+    sar.initialize(m, linear_solver="mumps", tee=False)
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
         probe_function=sar.test_func,
         saving_dir=cwd,
         number_of_subprocesses=1,
-        num_loop_workers=6,
+        num_loop_workers=1,
     )
 
     print("Total time: ", time.time() - ts)

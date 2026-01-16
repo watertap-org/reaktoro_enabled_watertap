@@ -11,20 +11,11 @@
 #################################################################################
 
 from parameter_sweep.loop_tool.loop_tool import loopTool, get_working_dir
-import reaktoro_enabled_watertap.flowsheets.softening_acid_ro.softening_acid_ro as sar
+import reaktoro_enabled_watertap.flowsheets.property_comparator.watertap_prop_comparison as wpc
 import time
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
 __author__ = "Alexander V. Dudchenko"
-
-
-def solve_with_ma27(m, tee=False, **kwargs):
-    result = sar.solve_model(m, tee=tee, linear_solver="mumps")
-    return result
-
-
-def initialize_ma27(m, **kwargs):
-    sar.initialize(m, linear_solver="mumps", tee=False)
 
 
 def main(save_location=None, config_location=None):
@@ -37,12 +28,11 @@ def main(save_location=None, config_location=None):
         config_location = work_path
 
     loopTool(
-        config_location + "/treatment_lime_soda_ash_hcl_h2so4_sweep.yaml",
-        build_function=sar.build_model,
-        initialize_function=initialize_ma27,
-        optimize_function=solve_with_ma27,
-        save_name="treatment_lime_soda_ash_hcl_h2so4_sweep",
-        probe_function=sar.test_func,
+        config_location + "/prop_sweep.yaml",
+        build_function=wpc.build_model,
+        initialize_function=wpc.initialize,
+        optimize_function=wpc.solve_model,
+        save_name="prop_sweep",
         saving_dir=save_location,
         number_of_subprocesses=1,
         num_loop_workers=1,
