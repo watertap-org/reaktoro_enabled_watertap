@@ -30,7 +30,6 @@ def main(save_location=None, config_location=None):
     loopTool(
         config_location + "/prop_sweep.yaml",
         build_function=wpc.build_model,
-        initialize_function=wpc.initialize,
         optimize_function=wpc.solve_model,
         save_name="prop_sweep",
         saving_dir=save_location,

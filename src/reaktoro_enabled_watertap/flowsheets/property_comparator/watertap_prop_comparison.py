@@ -44,7 +44,7 @@ from reaktoro_enabled_watertap.water_sources.source_water_importer import (
 
 def main():
     m = build_model("sample_1500_hardness.yaml")
-    m.fs.water_recovery.fix(0.1)
+    m.fs.water_recovery.fix(0.5)
     result = solve_model(m)
     assert_optimal_termination(result)
     print_comparison(m)
@@ -89,8 +89,11 @@ def print_comparison(m):
                 )
             )
         )
+    result = {}
     for header, val in zip(header, data_row):
-        print(f"{header}: {val}")
+        print(f"{header}: {float(val)}")
+        result[header] = float(val)
+    return result
 
 
 def build_model(water_case):
@@ -318,14 +321,6 @@ def scale_model(m):
         "flow_mass_phase_comp", 1, index=("Liq", "H2O")
     )
     iscale.calculate_scaling_factors(m)
-
-
-def initialize(m, **kwargs):
-    calculate_variable_from_constraint(
-        m.modified_properties_water_removal, m.eq_water_flow
-    )
-    m.eq_modified_properties.initialize()
-    solve_model(m)
 
 
 def solve_model(m, **kwargs):
