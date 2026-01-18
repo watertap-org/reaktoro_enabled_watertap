@@ -68,7 +68,7 @@ def test_acid_default():
             m.fs.acidification.chemical_reactor.pH["outlet"].value,
             1e-5,
         )
-        == 7.0159
+        == 6.986445564879911
     )
 
 
@@ -136,14 +136,14 @@ def test_costing():
             m.fs.acidification.chemical_reactor.costing.capital_cost.value,
             1e-1,
         )
-        == 42.114875938347524
+        == 84.22975187669
     )
     assert (
         pytest.approx(
             m.fs.costing.aggregate_flow_costs["fs_acidification_reagent_HCl"].value,
             1e-1,
         )
-        == 53.648
+        == 107.2958400
     )
 
 
@@ -176,7 +176,7 @@ def test_acidification_with_all_options():
             m.fs.acidification.chemical_reactor.pH["outlet"].value,
             1e-5,
         )
-        == 6.9272470967105
+        == 6.93692827314374
     )
 
 
@@ -223,14 +223,14 @@ def test_acidification_with_custom_options():
             m.fs.basification.chemical_reactor.flow_mol_solvent["H2O"].value,
             1e-5,
         )
-        == 0.00011104941
+        == 0.00011104941 * 2
     )
     assert (
         pytest.approx(
             m.fs.basification.chemical_reactor.flow_mol_reagent["NaOH"].value,
             1e-5,
         )
-        == 0.00020001450105132612
+        == 0.00020001450105132612 * 2
     )
     assert (
         pytest.approx(
@@ -245,5 +245,5 @@ def test_acidification_with_custom_options():
             m.fs.basification.chemical_reactor.pH["outlet"].value,
             1e-5,
         )
-        == 7.18918452782
+        == 7.338589245057
     )

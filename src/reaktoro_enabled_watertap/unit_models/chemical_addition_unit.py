@@ -255,7 +255,7 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
 
     def set_fixed_operation(self):
         """fixes operation point for chemical addition unit model"""
-        initial_dose = 10 / 1000 / len(self.selected_reagents)  # 10 ppm
+        initial_dose = 20 / 1000 / len(self.selected_reagents)  # 10 ppm
         for reagent, _ in self.selected_reagents.items():
             self.chemical_reactor.reagent_dose[reagent].fix(initial_dose)
         for reagent, options in self.selected_reagents.items():

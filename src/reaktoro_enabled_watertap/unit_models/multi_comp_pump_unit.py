@@ -161,10 +161,6 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         iscale.set_scaling_factor(self.pump.control_volume.work, work_scale)
         iscale.set_scaling_factor(self.pump.pH, 1 / 10)
         if self.config.default_costing_package is not None:
-            iscale.set_scaling_factor(
-                self.config.default_costing_package.energy_recovery_device.pressure_exchanger_cost,
-                1 / 100,
-            )
             scu.calculate_scale_from_dependent_vars(
                 self.pump.costing.capital_cost,
                 self.pump.costing.capital_cost_constraint,

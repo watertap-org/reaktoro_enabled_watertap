@@ -87,7 +87,7 @@ def test_osmotic_init_pressure():
             ),
             1e-2,
         )
-        == 4.4490
+        == 1.6091
     )
 
     assert (
@@ -106,21 +106,21 @@ def test_osmotic_init_pressure():
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.4353
+        == 1.6615
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Gypsum"]),
             1e-2,
         )
-        == 0.35895951780356383
+        == 0.40486
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_product.pH),
             1e-2,
         )
-        == 7.0674
+        == 7.0614
     )
 
 
@@ -177,7 +177,7 @@ def test_user_options():
             ),
             1e-2,
         )
-        == 4.374655086
+        == 1.4362
     )
 
     assert (
@@ -196,21 +196,21 @@ def test_user_options():
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.4353
+        == 1.6556
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Brucite"]),
             1e-2,
         )
-        == 8.15764261602e-07
+        == 8.545925271166723e-07
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_product.pH),
             1e-2,
         )
-        == 7.0674
+        == 7.0615
     )
 
 
@@ -262,7 +262,7 @@ def test_costing():
             ),
             1e-2,
         )
-        == 4.4490
+        == 1.609131852341
     )
 
     assert (
@@ -281,33 +281,33 @@ def test_costing():
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.4353
+        == 1.6615
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Gypsum"]),
             1e-2,
         )
-        == 0.35895951780356383
+        == 0.40486
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_product.pH),
             1e-2,
         )
-        == 7.0674
+        == 7.0614
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.costing.capital_cost),
             1e-2,
         )
-        == 6000
+        == 31763
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.costing.fixed_operating_cost),
             1e-2,
         )
-        == 600
+        == 3176
     )

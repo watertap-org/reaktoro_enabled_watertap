@@ -577,7 +577,7 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
 
     def set_fixed_operation(self):
 
-        initial_dose = 10 / 1000 / len(self.selected_reagents)  # 10 ppm
+        initial_dose = 20 / 1000 / len(self.selected_reagents)  # 10 ppm
         for reagent, options in self.selected_reagents.items():
             self.precipitation_reactor.reagent_dose[reagent].fix(initial_dose)
             if options["max_dose"] is not None:
