@@ -539,7 +539,7 @@ def test_func(m, **kwargs):
 
 def solve_model(m, tee=True, linear_solver="mumps", **kwargs):
     if linear_solver == "mumps":
-        pivtol = 1e-5
+        pivtol = 1e-4
         maxpivtol = 1e0
     else:
         pivtol = None
