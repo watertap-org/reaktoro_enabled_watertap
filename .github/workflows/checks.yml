@@ -54,8 +54,8 @@ jobs:
           - win64
           # - macos
         include:
-          - os: linux
-            os-version: ubuntu-22.04
+          #- os: linux
+          # os-version: ubuntu-22.04 0 remove till we get ma27
           - os: win64
             os-version: windows-2022
           # - os: macos
