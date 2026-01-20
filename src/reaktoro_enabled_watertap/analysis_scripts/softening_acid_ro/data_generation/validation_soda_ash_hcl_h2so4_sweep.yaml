@@ -1,6 +1,12 @@
 validation_sweep:
   build_defaults:
     softening_reagents: 'Na2CO3'
+    feed_flow_rate:
+      value: 5000
+      units: 'm**3/day'
+    system_costing: 'Amusat_et_al_2024'    
+    rkt_hessian_type: 'LBFGS'
+    bfgs_initialization_type: 'GaussNewton'
   build_loop:
     acidification_reagents:
       - HCl

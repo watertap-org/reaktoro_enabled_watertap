@@ -272,14 +272,14 @@ def test_precipitation_with_custom_options():
             m.fs.precipitation.precipitation_reactor.flow_mol_solvent["H2O"].value,
             1e-5,
         )
-        == 0.00011104941
+        == 0.00011104941 * 2
     )
     assert (
         pytest.approx(
             m.fs.precipitation.precipitation_reactor.flow_mol_reagent["NaOH"].value,
             1e-5,
         )
-        == 0.00020001450105132612
+        == 0.00020001450105132612 * 2
     )
     assert (
         pytest.approx(
@@ -312,5 +312,5 @@ def test_precipitation_with_custom_options():
             ].value,
             1e-5,
         )
-        == 1.7218732627512498e-06
+        == 1.71429198660e-05
     )

@@ -1,4 +1,15 @@
 stability_sweep:
+  build_defaults:
+    softening_reagents: 
+      - 'CaO'
+      - 'Na2CO3'
+    acidification_reagents: 
+      - 'HCl'
+      - 'H2SO4'
+    feed_flow_rate:
+      value: 5000
+      units: 'm**3/day'    
+    system_costing: 'Amusat_et_al_2024'
   build_loop: 
     hessian_sim_cases:
       lmt_sc1:
@@ -28,12 +39,6 @@ stability_sweep:
       cbfgs_gn:
         rkt_hessian_type: CBFGS
         bfgs_initialization_type: GaussNewton
-      # bfgs_mod_sc1:
-      #   rkt_hessian_type: BFGS_mod
-      #   bfgs_initialization_type: scalar1
-      # bfgs_mod_gn:
-      #   rkt_hessian_type: BFGS_mod
-      #   bfgs_initialization_type: GaussNewton
       bfgs_damp_sc1:
         rkt_hessian_type: BFGS_damp
         bfgs_initialization_type: scalar1

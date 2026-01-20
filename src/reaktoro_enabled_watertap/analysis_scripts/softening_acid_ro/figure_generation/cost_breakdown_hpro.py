@@ -168,7 +168,7 @@ if __name__ == "__main__":
             {"ERD": {"label": None, "color": "#d9f0d3"}},
             {"RO": {"label": None, "color": "#a6cee3"}},
             {"HPRO": {"label": None, "color": "#1f78b4"}},
-            {"Acid addition": {"label": None, "color": "#fb9a99"}},
+            {"Acid addition": {"label": None, "color": "#a7a7a7"}},
             {"Softening": {"label": None, "color": "#33a02c"}},
         ]
     )

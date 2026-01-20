@@ -1,0 +1,19 @@
+prop_sweep:
+  build_loop:
+    water_sim_cases:
+      BGW_1500:
+        water_case: "sample_1500_hardness.yaml"
+      BGW_500:
+        water_case: "sample_500_hardness.yaml"
+      BGW:
+        water_case: "USDA_brackish.yaml"
+      SW:
+        water_case: "Seawater.yaml"
+    sweep_param_loop:
+      water_recovery:
+        type: LinearSample
+        param: fs.water_recovery
+        lower_limit: 0.5
+        upper_limit: 0.9
+        num_samples: 41
+

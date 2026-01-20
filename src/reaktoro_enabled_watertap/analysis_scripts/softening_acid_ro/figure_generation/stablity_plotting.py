@@ -200,7 +200,7 @@ if __name__ == "__main__":
             # print("data", data)
             return data[data == data]
 
-    def plot_result(dtype, pos, data, color, label=None, w=0.3):
+    def plot_result(dtype, pos, data, color, label=None, w=0.4):
         if dtype == "Solve rate":
             if data is not None:
                 fig.plot_bar(
@@ -228,7 +228,7 @@ if __name__ == "__main__":
         for i, hess in enumerate(keys):
             if isinstance(keys[hess], dict):
                 for j, (key, v) in enumerate(keys[hess].items()):
-                    pos = i + j * 0.3 + 0.2 - 0.3
+                    pos = i + j * 0.4 + 0.2 - 0.4
                     data = process_data(fig_type, data_results[v])
                     if fig_settings["yscale"] == "log":
                         data = np.log10(data)

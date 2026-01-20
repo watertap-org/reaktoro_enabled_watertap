@@ -25,7 +25,7 @@ from idaes.core import (
     declare_process_block_class,
 )
 from idaes.core import UnitModelCostingBlock
-
+from reaktoro_enabled_watertap.utils import scale_utils as scu
 import idaes.core.util.scaling as iscale
 
 __author__ = "Alexander V. Dudchenko"
@@ -104,7 +104,8 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         self.pump = Pump(property_package=self.config.default_property_package)
         if self.config.default_costing_package is not None:
             self.pump.costing = UnitModelCostingBlock(
-                flowsheet_costing_block=self.config.default_costing_package
+                flowsheet_costing_block=self.config.default_costing_package,
+                **self.config.default_costing_package_kwargs,
             )
         # Add pump flow rate
         self.pump.control_volume.properties_in[0].flow_vol_phase[...]
@@ -132,13 +133,6 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
                 * self.config.osmotic_over_pressure
                 + self.config.osmotic_pressure_offset
             )
-
-            print(
-                pressure_guess,
-                value(
-                    pyunits.convert(self.config.maximum_pressure, to_units=pyunits.Pa)
-                ),
-            )
             if pressure_guess > value(
                 pyunits.convert(self.config.maximum_pressure, to_units=pyunits.Pa)
             ):
@@ -159,11 +153,22 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         self.pump.outlet.pressure[0].unfix()
 
     def scale_before_initialization(self, **kwargs):
+        h2o_scale = self.config.default_property_package._default_scaling_factors[
+            "flow_mol_phase_comp", ("Liq", "H2O")
+        ] / value(self.config.default_property_package.mw_comp["H2O"])
+        work_scale = 1e-5 / (1 / h2o_scale)
         iscale.set_scaling_factor(self.pump.outlet.pressure, 1e-5)
-        iscale.set_scaling_factor(self.pump.control_volume.work, 1e-4)
-        iscale.set_scaling_factor(self.pump.pH, 1 / 10 / 10)
+        iscale.set_scaling_factor(self.pump.control_volume.work, work_scale)
+        iscale.set_scaling_factor(self.pump.pH, 1 / 10)
+        if self.config.default_costing_package is not None:
+            scu.calculate_scale_from_dependent_vars(
+                self.pump.costing.capital_cost,
+                self.pump.costing.capital_cost_constraint,
+                [self.pump.control_volume.work[0]],
+            )
+
         if self.config.track_pE:
-            iscale.set_scaling_factor(self.pump.pE, 1 / 10)
+            iscale.set_scaling_factor(self.pump.pE, 1)
 
     def initialize_unit(self):
         self.set_fixed_operation()

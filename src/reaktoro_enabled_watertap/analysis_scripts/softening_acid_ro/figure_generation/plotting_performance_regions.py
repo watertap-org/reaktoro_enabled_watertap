@@ -33,6 +33,7 @@ def plot_fig(
     regions=None,
     add_region_lbl=False,
     marker="o",
+    color="black",
 ):
     if fig is None:
         fig = figureGenerator()
@@ -44,7 +45,7 @@ def plot_fig(
         ydata,
         marker=marker,
         markersize=4,
-        color="black",
+        color=color,
         label=data_label,
     )
     if regions is not None:
@@ -81,6 +82,12 @@ def get_different(data_in, data_out):
 
 
 if __name__ == "__main__":
+    water_reference = {
+        "seawater": "seawater",
+        "BGW": "USBR BGW",
+        "BGW_500": "USGS case 1",
+        "BGW_1500": "USGS case 2",
+    }
     work_path = get_lib_path()
     save_location = (
         work_path
@@ -106,6 +113,14 @@ if __name__ == "__main__":
         {
             "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
             "return_key": ("HPRO1", "flux"),
+        },
+        {
+            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
+            "return_key": ("HPRO1", "flux inlet"),
+        },
+        {
+            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
+            "return_key": ("HPRO1", "flux outlet"),
         },
         {
             "filekey": f"fs.hpro_unit.ro_unit.area",
@@ -140,6 +155,14 @@ if __name__ == "__main__":
         {
             "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
             "return_key": ("RO1", "flux"),
+        },
+        {
+            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
+            "return_key": ("RO1", "flux inlet"),
+        },
+        {
+            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
+            "return_key": ("RO1", "flux outlet"),
         },
         {
             "filekey": f"fs.ro_unit.ro_unit.area",
@@ -242,7 +265,16 @@ if __name__ == "__main__":
         stack_keys="water_sim_cases", data_key="LCOW", reduction_type="min"
     )
     sea_water.display()
-    for t in ["area", "pressure", "velocity", "flux", "pH"]:
+    # need to merge stage 1 and stage 2 data to single data set for HPRO
+    for t in [
+        "area",
+        "pressure",
+        "velocity",
+        "flux",
+        "pH",
+        "flux inlet",
+        "flux outlet",
+    ]:
 
         hpro_area = sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", t)].data
         ro_area = sea_water[("water_sim_cases", "SW_RO"), ("RO1", t)].data
@@ -252,10 +284,16 @@ if __name__ == "__main__":
         ro_area[ro_area != ro_area] = ssro_area[ro_area != ro_area]
         # print(ro_area, sea_water[("water_sim_cases", "SW_RO"), ("RO1", t)])
         sea_water[("water_sim_cases", "SW_RO"), ("RO1", t)].set_data(ro_area)
-    # ro_rea=
-    # sea_water[("water_sim_cases", "SW_HPRO"), ("RO1", "area")].data[hpro_area == 0] = (
-    #     sea_water[("water_sim_cases", "SW_RO"), ("RO1", "area")].data
-    # )
+    for scalant in ["Gypsum", "Calcite"]:
+        ro_data = sea_water[
+            ("water_sim_cases", "SW_RO"), ("Scaling tendency", scalant)
+        ].data
+        hpro_data = sea_water[
+            ("water_sim_cases", "SW_HPRO"), ("HP Scaling tendency", scalant)
+        ].data
+        ro_data[ro_data != ro_data] = hpro_data[ro_data != ro_data]
+
+        sea_water["stacked_data", ("HP Scaling tendency", scalant)].set_data(ro_data)
     bgw_cases = [
         ("water_sim_cases", "BGW"),
         ("water_sim_cases", f"BGW_500"),
@@ -278,8 +316,8 @@ if __name__ == "__main__":
         ("water_sim_cases", f"BGW_500"): {
             "Region 1": {"range": [50, 59], "color": "#fef0d9"},
             "Region 2": {"range": [59, 64], "color": "#fdd49e"},
-            "Region 3": {"range": [64, 68], "color": "#fdbb84"},
-            "Region 4": {"range": [68, 90], "color": "#fc8d59"},
+            "Region 3": {"range": [64, 69], "color": "#fdbb84"},
+            "Region 4": {"range": [69, 90], "color": "#fc8d59"},
         },
         ("water_sim_cases", f"BGW_1500"): {
             "Region 4": {"range": [50, 90], "color": "#fc8d59"},
@@ -290,48 +328,77 @@ if __name__ == "__main__":
         sea_water["stacked_data", "Water recovery"],
         sea_water[("water_sim_cases", "SW_RO"), ("RO1", "flux")].data * 3600,
         ylabel="Flux (LMH)",
-        yticks=[0, 10, 20, 30, 40],
+        yticks=[0, 10, 20, 30],
         data_label="RO",
         save_fig=False,
         width=1.8,
         height=1.6,
-        save_name="hpro_area",
+        save_name="seawater/hpro_avg_flux",
     )
     plot_fig(
         sea_water["stacked_data", "Water recovery"],
         sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", "flux")].data * 3600,
         ylabel="Flux (LMH)",
-        yticks=[0, 10, 20, 30, 40],
+        yticks=[0, 10, 20, 30],
         data_label="HPRO",
         save_fig=True,
         fig=fig,
         marker="s",
-        save_name="flux_area",
+        color="red",
+        save_name="seawater/hpro_avg_flux",
         regions=regions["seawater"],
     )
-    fig = plot_fig(
-        sea_water["stacked_data", "Water recovery"],
-        sea_water[("water_sim_cases", "SW_RO"), ("RO1", "area")],
-        ylabel="Area (m$^2$)",
-        yticks=[0, 50, 100, 150, 200],
-        data_label="RO",
-        save_fig=False,
-        width=1.8,
-        height=1.6,
-        save_name="hpro_area",
-    )
-    plot_fig(
-        sea_water["stacked_data", "Water recovery"],
-        sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", "area")],
-        ylabel="Area (m$^2$)",
-        yticks=[0, 50, 100, 150, 200],
-        data_label="HPRO",
-        save_fig=True,
-        fig=fig,
-        marker="s",
-        save_name="hpro_area",
-        regions=regions["seawater"],
-    )
+    for point in ["inlet", "outlet"]:
+        fig = plot_fig(
+            sea_water["stacked_data", "Water recovery"],
+            sea_water[("water_sim_cases", "SW_RO"), ("RO1", f"flux {point}")].data
+            * 3600,
+            ylabel="Flux (LMH)",
+            yticks=[0, 10, 20, 30, 40, 50, 60],
+            data_label="RO",
+            save_fig=False,
+            width=1.8,
+            height=1.6,
+            save_name=f"seawater/hpro_{point}_flux",
+        )
+        plot_fig(
+            sea_water["stacked_data", "Water recovery"],
+            sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", f"flux {point}")].data
+            * 3600,
+            ylabel="Flux (LMH)",
+            yticks=[0, 10, 20, 30, 40, 50, 60],
+            data_label="HPRO",
+            save_fig=True,
+            fig=fig,
+            marker="s",
+            color="red",
+            save_name=f"seawater/hpro_{point}_flux",
+            regions=regions["seawater"],
+        )
+    # fig = plot_fig(
+    #     sea_water["stacked_data", "Water recovery"],
+    #     sea_water[("water_sim_cases", "SW_RO"), ("RO1", "area")],
+    #     ylabel="Area (m$^2$)",
+    #     yticks=[0, 50, 100, 150, 200],
+    #     data_label="RO",
+    #     save_fig=False,
+    #     width=1.8,
+    #     height=1.6,
+    #     save_name="hpro_area",
+    # )
+    # plot_fig(
+    #     sea_water["stacked_data", "Water recovery"],
+    #     sea_water[("water_sim_cases", "SW_HPRO"), ("HPRO1", "area")],
+    #     ylabel="Area (m$^2$)",
+    #     yticks=[0, 50, 100, 150, 200],
+    #     data_label="HPRO",
+    #     save_fig=True,
+    #     color="red",
+    #     fig=fig,
+    #     marker="s",
+    #     save_name="hpro_area",
+    #     regions=regions["seawater"],
+    # )
     fig = plot_fig(
         sea_water["stacked_data", "Water recovery"],
         sea_water[("water_sim_cases", "SW_RO"), ("RO1", "velocity")],
@@ -351,8 +418,9 @@ if __name__ == "__main__":
         data_label="HPRO",
         save_fig=True,
         fig=fig,
+        color="red",
         marker="s",
-        save_name="hpro_Velocity",
+        save_name="seawater/hpro_Velocity",
         regions=regions["seawater"],
     )
     fig = plot_fig(
@@ -374,8 +442,9 @@ if __name__ == "__main__":
         data_label="HPRO",
         save_fig=True,
         fig=fig,
+        color="red",
         marker="s",
-        save_name="hpro_Pressure",
+        save_name="seawater/hpro_Pressure",
         regions=regions["seawater"],
     )
 
@@ -387,7 +456,7 @@ if __name__ == "__main__":
         save_fig=True,
         width=1.8,
         height=1.6,
-        save_name=f"hpro_soda ash",
+        save_name=f"seawater/hpro_soda ash",
         regions=regions["seawater"],
         # data_label="Soda ash",
     )
@@ -401,7 +470,7 @@ if __name__ == "__main__":
         height=1.6,
         data_label="Lime",
         marker="s",
-        save_name=f"hpro_lime",
+        save_name=f"seawater/hpro_lime",
         regions=regions["seawater"],
         # fig=fig,
     )
@@ -415,7 +484,7 @@ if __name__ == "__main__":
         width=1.8,
         height=1.6,
         data_label="HCl",
-        save_name=f"hpro_Velocity",
+        save_name=f"seawater/hpro_Velocity",
     )
     fig = plot_fig(
         sea_water["stacked_data", "Water recovery"],
@@ -427,6 +496,7 @@ if __name__ == "__main__":
         width=1.8,
         height=1.6,
         data_label="H$_2$SO$_4$",
+        color="red",
         marker="s",
         regions=regions["seawater"],
         save_name=f"hpro_acid",
@@ -442,7 +512,7 @@ if __name__ == "__main__":
         height=1.6,
         marker="s",
         regions=regions["seawater"],
-        save_name=f"hpro_alkalinity",
+        save_name=f"seawater/hpro_alkalinity",
     )
     fig = plot_fig(
         sea_water["stacked_data", "Water recovery"],
@@ -456,7 +526,7 @@ if __name__ == "__main__":
         width=1.8,
         height=1.6,
         data_label="Ca",
-        save_name=f"hpro_Velocity",
+        save_name=f"seawater/hpro_velocity",
     )
     fig = plot_fig(
         sea_water["stacked_data", "Water recovery"],
@@ -470,9 +540,10 @@ if __name__ == "__main__":
         width=1.8,
         height=1.6,
         data_label="HCO$_3$",
+        color="red",
         marker="s",
         regions=regions["seawater"],
-        save_name=f"hpro_ions",
+        save_name=f"seawater/hpro_ion_removal",
         fig=fig,
     )
     fig = plot_fig(
@@ -487,9 +558,10 @@ if __name__ == "__main__":
         width=1.8,
         height=1.6,
         data_label="Mg",
+        color="blue",
         marker="d",
         regions=regions["seawater"],
-        save_name=f"hpro_ions",
+        save_name=f"seawater/hpro_ion_removal",
         fig=fig,
     )
     fig = plot_fig(
@@ -501,7 +573,7 @@ if __name__ == "__main__":
         width=1.8,
         height=1.6,
         data_label="Calcite",
-        save_name=f"hpro_scaling",
+        save_name=f"seawater/hpro_scaling",
     )
     fig = plot_fig(
         sea_water["stacked_data", "Water recovery"],
@@ -514,8 +586,9 @@ if __name__ == "__main__":
         # data_label="H$_2$SO$_4$",
         marker="s",
         regions=regions["seawater"],
-        save_name=f"hpro_scaling",
+        save_name=f"seawater/hpro_scaling",
         fig=fig,
+        color="red",
         data_label="Gypsum",
     )
 
@@ -527,7 +600,7 @@ if __name__ == "__main__":
         save_fig=True,
         width=1.8,
         height=1.6,
-        save_name="hpro_soft_ph",
+        save_name="seawater/hpro_soft_ph",
         regions=regions["seawater"],
     )
 
@@ -540,7 +613,7 @@ if __name__ == "__main__":
         save_fig=False,
         width=1.8,
         height=1.6,
-        save_name="hpro_ph",
+        save_name="seawater/hpro_ph",
     )
     plot_fig(
         sea_water["stacked_data", "Water recovery"],
@@ -548,13 +621,15 @@ if __name__ == "__main__":
         ylabel="Retentate pH",
         yticks=[6, 7, 8, 9, 10, 11],
         data_label="HPRO",
+        color="red",
         save_fig=True,
         fig=fig,
         marker="s",
-        save_name="hpro_ph",
+        save_name="seawater/hpro_ph",
         regions=regions["seawater"],
     )
     for i, hd in enumerate(bgw_cases):
+        water_case = water_reference[hd[1]]
         fig = plot_fig(
             data_manager[hd, "Water recovery"],
             data_manager[hd, ("RO1", "flux")].data * 3600,
@@ -563,7 +638,7 @@ if __name__ == "__main__":
             save_fig=True,
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_flux",
+            save_name=f"{water_case}/{water_case}_avg_flux",
             regions=regions[hd],
         )
         fig = plot_fig(
@@ -574,7 +649,7 @@ if __name__ == "__main__":
             save_fig=True,
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_area",
+            save_name=f"{water_case}/{water_case}_area",
             regions=regions[hd],
         )
         fig = plot_fig(
@@ -585,7 +660,7 @@ if __name__ == "__main__":
             save_fig=True,
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_Pressure",
+            save_name=f"{water_case}/{water_case}_Pressure",
             regions=regions[hd],
         )
         fig = plot_fig(
@@ -596,7 +671,7 @@ if __name__ == "__main__":
             save_fig=True,
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_Velocity",
+            save_name=f"{water_case}/{water_case}_Velocity",
             regions=regions[hd],
         )
 
@@ -608,7 +683,7 @@ if __name__ == "__main__":
             save_fig=True,
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_soda ash",
+            save_name=f"{water_case}/{water_case}_soda ash",
             regions=regions[hd],
             # data_label="Soda ash",
         )
@@ -622,7 +697,7 @@ if __name__ == "__main__":
             height=1.6,
             data_label="Lime",
             marker="s",
-            save_name=f"{hd}_lime",
+            save_name=f"{water_case}/{water_case}_lime",
             regions=regions[hd],
         )
         fig = plot_fig(
@@ -644,9 +719,10 @@ if __name__ == "__main__":
             width=1.8,
             height=1.6,
             data_label="H$_2$SO$_4$",
+            color="red",
             marker="s",
             regions=regions[hd],
-            save_name=f"{hd}_acid",
+            save_name=f"{water_case}/{water_case}_acid",
             fig=fig,
         )
         fig = plot_fig(
@@ -661,7 +737,7 @@ if __name__ == "__main__":
             width=1.8,
             height=1.6,
             data_label="Ca",
-            save_name=f"{hd}_ions",
+            save_name=f"{water_case}/{water_case}_ion_removal",
         )
         fig = plot_fig(
             data_manager[hd, "Water recovery"],
@@ -675,9 +751,10 @@ if __name__ == "__main__":
             width=1.8,
             height=1.6,
             data_label="HCO$_3$",
+            color="red",
             marker="s",
             regions=regions[hd],
-            save_name=f"{hd}_ions",
+            save_name=f"{water_case}/{water_case}_ion_removal",
             fig=fig,
         )
         fig = plot_fig(
@@ -692,9 +769,10 @@ if __name__ == "__main__":
             width=1.8,
             height=1.6,
             data_label="Mg",
+            color="blue",
             marker="d",
             regions=regions[hd],
-            save_name=f"{hd}_ions",
+            save_name=f"{water_case}/{water_case}_ion_removal",
             fig=fig,
         )
         fig = plot_fig(
@@ -707,7 +785,7 @@ if __name__ == "__main__":
             height=1.6,
             data_label="Calcite",
             regions=regions[hd],
-            save_name=f"{hd}_scaling",
+            save_name=f"{water_case}/{water_case}_scaling",
         )
         fig = plot_fig(
             data_manager[hd, "Water recovery"],
@@ -720,9 +798,10 @@ if __name__ == "__main__":
             # data_label="H$_2$SO$_4$",
             marker="s",
             regions=regions[hd],
-            save_name=f"{hd}_scaling",
+            save_name=f"{water_case}/{water_case}_scaling",
             fig=fig,
             data_label="Gypsum",
+            color="red",
         )
 
         fig = plot_fig(
@@ -734,7 +813,7 @@ if __name__ == "__main__":
             width=1.8,
             regions=regions[hd],
             height=1.6,
-            save_name=f"{hd}_ro_ph",
+            save_name=f"{water_case}/{water_case}_ro_ph",
         )
         fig = plot_fig(
             data_manager[hd, "Water recovery"],
@@ -745,7 +824,7 @@ if __name__ == "__main__":
             regions=regions[hd],
             width=1.8,
             height=1.6,
-            save_name=f"{hd}_soft_ph",
+            save_name=f"{water_case}/{water_case}_soft_ph",
         )
         fig = plot_fig(
             data_manager[hd, "Water recovery"],
@@ -757,5 +836,5 @@ if __name__ == "__main__":
             height=1.6,
             marker="s",
             regions=regions[hd],
-            save_name=f"{hd}_alkalinity",
+            save_name=f"{water_case}/{water_case}_alkalinity",
         )

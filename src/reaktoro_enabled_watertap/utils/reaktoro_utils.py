@@ -218,7 +218,7 @@ class ViableReagents(ViableReagentsBase):
             {"Cl_-": 1, "H2O": 1},
             min_dose=0.01,
             max_dose=3000,
-            purity=0.38,
+            purity=0.3,
             solvent=("H2O", 18.01 * pyunits.g / pyunits.mol),
             cost=0.17,
             density_reagent=1.18 * pyunits.kg / pyunits.liter,
