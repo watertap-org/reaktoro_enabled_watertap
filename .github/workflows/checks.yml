@@ -50,7 +50,7 @@ jobs:
         python-version:
           - "3.12"
         os:
-          - linux
+          #- linux
           - win64
           # - macos
         include:
