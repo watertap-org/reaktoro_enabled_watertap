@@ -1,0 +1,3 @@
+This contains analysis code necessary to generate comparisons between Reaktoro-PSE and WaterTAP property package. The data generation will run the four supplied waters in water_sources folder across a range of recoveries using water_prop_comparison flowsheet in property_comparator folder. 
+
+The code in figure_generation folder can then be used to plot difference in osmotic pressure and density between the NaCl property package, Seawater property package and Reaktoro.

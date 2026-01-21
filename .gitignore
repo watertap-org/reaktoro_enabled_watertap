@@ -5,3 +5,6 @@
 *.pdf
 *.bak
 *.pyc
+*.egg-info/
+*.egg
+*.pytest_cache/
