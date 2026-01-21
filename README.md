@@ -25,7 +25,7 @@ To reproduce results please review the analysis_scripts folder.
 Please review files in data_generation folder and run all the analysis script python files. Generally, these will use the [loop_tool](https://watertap.readthedocs.io/en/latest/how_to_guides/how_to_use_loopTool_to_explore_flowsheets.html). Review accompanying .yaml files to understand the sweeps being performed, and likely accompanying readme file. 
 
 ### 3.2 Figure generation and data processing. 
-Please review the executable python files in the figure_generation folder, and run them to generate figures. The repo does not include any of the necessary data, so please refere to the readme file in the folder or generate data using the files in the data_generation folder. 
+Please review the executable python files in the figure_generation folder, and run them to generate figures. The repo does not include any of the necessary data, so please refer to the readme file in the folder or generate data using the files in the data_generation folder. 
 
 ## 4 Reaktoro enabled unit models with simplified functionality. 
 All unit models are designed to work with MCAS property package, and are available in unit_models folder. 
