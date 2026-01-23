@@ -147,6 +147,6 @@ jobs:
         if: matrix.coverage
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report-${{ matrix.os }}
+          name: coverage-report-${{ matrix.os }}-${{ matrix.pytest_folders }}
           path: coverage.xml
           if-no-files-found: error
