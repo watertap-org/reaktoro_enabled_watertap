@@ -101,29 +101,29 @@ jobs:
         name: Enable coverage for pytest
         run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
       - if: matrix.pytest_folders == 'softening_acid_ro_validation'
-        name: Run pytest
+        name: Run pytest softening_acid_ro_validation
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_plotting.py
       - if: matrix.pytest_folders == 'softening_acid_ro_treatment'
-        name: Run pytest
+        name: Run pytest softening_acid_ro_treatment
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_plotting.py
       - if: matrix.pytest_folders == 'property_comp'
-        name: Run pytest
+        name: Run pytest property_comp
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest src/reaktoro_enabled_watertap/analysis_scripts/property_comp/
+          pytest src/reaktoro_enabled_watertap/analysis_scripts/property_comp/tests/
       - if: matrix.pytest_folders == 'flowsheets'
-        name: Run pytest
+        name: Run pytest flowsheets
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/flowsheets/
       - if: matrix.pytest_folders == 'core'
-        name: Run pytest
+        name: Run pytest core
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/costing/ \
