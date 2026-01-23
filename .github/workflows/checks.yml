@@ -101,8 +101,8 @@ jobs:
       - if: matrix.coverage
         name: Enable coverage for pytest
         run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
-      - if: matrix.pytest_folders == 'softening_acid_ro_validation'
-        name: Run pytest softening_acid_ro_validation
+      - if: matrix.pytest_folders == 'softening_acid_ro_stability'
+        name: Run pytest softening_acid_ro_stability
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_stability_data_generation.py \

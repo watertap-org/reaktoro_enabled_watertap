@@ -20,10 +20,10 @@ def test_stability_sweep():
         work_path
         / "analysis_scripts/softening_acid_ro/data_generation/output/stability_sweep_analysisType_stability_sweep.h5"
     )
-    # if os.path.exists(filename):
-    #     os.remove(filename)
+    if os.path.exists(filename):
+        os.remove(filename)
 
-    # stability_sweep.main()
+    stability_sweep.main()
 
     data_manager = psDataManager(
         filename,
