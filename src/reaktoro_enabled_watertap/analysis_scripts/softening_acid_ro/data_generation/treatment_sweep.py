@@ -18,19 +18,10 @@ from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 __author__ = "Alexander V. Dudchenko"
 
 
-def solve_with_ma27(m, tee=False, **kwargs):
-    result = sar.solve_model(m, tee=tee, linear_solver="mumps")
-    return result
-
-
-def initialize_ma27(m, **kwargs):
-    sar.initialize(m, linear_solver="mumps", tee=False)
-
-
 def main(save_location=None, config_location=None):
     ts = time.time()
     work_path = get_lib_path()
-    work_path = str(work_path) + "/analysis_scripts/property_comparison/data_generation"
+    work_path = str(work_path) + "/analysis_scripts/softening_acid_ro/data_generation"
     if save_location is None:
         save_location = work_path
     if config_location is None:
@@ -39,8 +30,8 @@ def main(save_location=None, config_location=None):
     loopTool(
         config_location + "/treatment_lime_soda_ash_hcl_h2so4_sweep.yaml",
         build_function=sar.build_model,
-        initialize_function=initialize_ma27,
-        optimize_function=solve_with_ma27,
+        initialize_function=sar.initialize,
+        optimize_function=sar.solve_model,
         save_name="treatment_lime_soda_ash_hcl_h2so4_sweep",
         probe_function=sar.test_func,
         saving_dir=save_location,

@@ -81,7 +81,7 @@ def get_different(data_in, data_out):
     return (data_in.data - data_out.data) / data_in.data * 100
 
 
-if __name__ == "__main__":
+def main(show_figs=True):
     water_reference = {
         "seawater": "seawater",
         "BGW": "USBR BGW",
@@ -89,6 +89,7 @@ if __name__ == "__main__":
         "BGW_1500": "USGS case 2",
     }
     work_path = get_lib_path()
+    global save_location
     save_location = (
         work_path
         / "analysis_scripts/softening_acid_ro/figure_generation/treatment_figures/"
@@ -100,162 +101,160 @@ if __name__ == "__main__":
         ),
     )
 
-    import_keys = [
-        {
-            "filekey": "fs.water_recovery",
-            "return_key": "Water recovery",
-            "units": "%",
-        },
-        {
-            "filekey": "fs.costing.LCOW",
-            "return_key": "LCOW",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
-            "return_key": ("HPRO1", "flux"),
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
-            "return_key": ("HPRO1", "flux inlet"),
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
-            "return_key": ("HPRO1", "flux outlet"),
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.area",
-            "return_key": ("HPRO1", "area"),
-            "units": "m**2",
-        },
-        {
-            "filekey": "fs.ro_unit.ro_retentate.pH",
-            "return_key": ("RO1", "pH"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": "fs.hpro_unit.ro_retentate.pH",
-            "return_key": ("HPRO1", "pH"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": "fs.softening_unit.precipitation_reactor.pH[outlet]",
-            "return_key": ("softening", "pH"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.feed_side.properties[0.0,0.0].pressure",
-            "return_key": ("HPRO1", "pressure"),
-            "units": "bar",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.feed_side.velocity[0.0,0.0]",
-            "return_key": ("HPRO1", "velocity"),
-            "units": "m/s",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
-            "return_key": ("RO1", "flux"),
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
-            "return_key": ("RO1", "flux inlet"),
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
-            "return_key": ("RO1", "flux outlet"),
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.area",
-            "return_key": ("RO1", "area"),
-            "units": "m**2",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.feed_side.properties[0.0,0.0].pressure",
-            "return_key": ("RO1", "pressure"),
-            "units": "bar",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.feed_side.velocity[0.0,0.0]",
-            "return_key": ("RO1", "velocity"),
-            "units": "m/s",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.reagent_dose[CaO]",
-            "return_key": ("Softening_RKT_1", "Chemical dose", "Lime"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.reagent_dose[Na2CO3]",
-            "return_key": ("Softening_RKT_1", "Chemical dose", "Soda ash"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.dissolution_reactor.properties_in[0.0].conc_mass_phase_comp[Liq,Ca_2+]",
-            "return_key": ("Softening_RKT_1", "Effluent in", "Ca"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.dissolution_reactor.properties_in[0.0].conc_mass_phase_comp[Liq,HCO3_-]",
-            "return_key": ("Softening_RKT_1", "Effluent in", "HCO3"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.dissolution_reactor.properties_in[0.0].conc_mass_phase_comp[Liq,Mg_2+]",
-            "return_key": ("Softening_RKT_1", "Effluent in", "Mg"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.precipitation_reactor.properties_out[0.0].conc_mass_phase_comp[Liq,Ca_2+]",
-            "return_key": ("Softening_RKT_1", "Effluent out", "Ca"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.precipitation_reactor.properties_out[0.0].conc_mass_phase_comp[Liq,HCO3_-]",
-            "return_key": ("Softening_RKT_1", "Effluent out", "HCO3"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.precipitation_reactor.properties_out[0.0].conc_mass_phase_comp[Liq,Mg_2+]",
-            "return_key": ("Softening_RKT_1", "Effluent out", "Mg"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.alkalinity",
-            "return_key": ("Softening_RKT_1", "Alkalinity"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.acidification_unit.chemical_reactor.reagent_dose[HCl]",
-            "return_key": ("acid_addition", "Chemical dose", "HCl"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.acidification_unit.chemical_reactor.reagent_dose[H2SO4]",
-            "return_key": ("acid_addition", "Chemical dose", "H2SO4"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.scaling_tendency[Calcite]",
-            "return_key": ("Scaling tendency", "Calcite"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.scaling_tendency[Gypsum]",
-            "return_key": ("Scaling tendency", "Gypsum"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.scaling_tendency[Calcite]",
-            "return_key": ("HP Scaling tendency", "Calcite"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.scaling_tendency[Gypsum]",
-            "return_key": ("HP Scaling tendency", "Gypsum"),
-            "units": "dimensionless",
-        },
-    ]
-    data_manager.load_data(import_keys)
+    data_manager.register_data_key(
+        file_key="fs.water_recovery",
+        return_key="Water recovery",
+        units="%",
+    )
+    data_manager.register_data_key(
+        file_key="fs.costing.LCOW",
+        return_key="LCOW",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
+        return_key=("HPRO1", "flux"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
+        return_key=("HPRO1", "flux inlet"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
+        return_key=("HPRO1", "flux outlet"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.area",
+        return_key=("HPRO1", "area"),
+        units="m**2",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_retentate.pH",
+        return_key=("RO1", "pH"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_retentate.pH",
+        return_key=("HPRO1", "pH"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.pH[outlet]",
+        return_key=("softening", "pH"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.feed_side.properties[0.0,0.0].pressure",
+        return_key=("HPRO1", "pressure"),
+        units="bar",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.feed_side.velocity[0.0,0.0]",
+        return_key=("HPRO1", "velocity"),
+        units="m/s",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.flux_mass_phase_comp_avg[0.0,Liq,H2O]",
+        return_key=("RO1", "flux"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,0.1,Liq,H2O]",
+        return_key=("RO1", "flux inlet"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.flux_mass_phase_comp[0.0,1.0,Liq,H2O]",
+        return_key=("RO1", "flux outlet"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.area",
+        return_key=("RO1", "area"),
+        units="m**2",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.feed_side.properties[0.0,0.0].pressure",
+        return_key=("RO1", "pressure"),
+        units="bar",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.feed_side.velocity[0.0,0.0]",
+        return_key=("RO1", "velocity"),
+        units="m/s",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.reagent_dose[CaO]",
+        return_key=("Softening_RKT_1", "Chemical dose", "Lime"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.reagent_dose[Na2CO3]",
+        return_key=("Softening_RKT_1", "Chemical dose", "Soda ash"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.dissolution_reactor.properties_in[0.0].conc_mass_phase_comp[Liq,Ca_2+]",
+        return_key=("Softening_RKT_1", "Effluent in", "Ca"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.dissolution_reactor.properties_in[0.0].conc_mass_phase_comp[Liq,HCO3_-]",
+        return_key=("Softening_RKT_1", "Effluent in", "HCO3"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.dissolution_reactor.properties_in[0.0].conc_mass_phase_comp[Liq,Mg_2+]",
+        return_key=("Softening_RKT_1", "Effluent in", "Mg"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.precipitation_reactor.properties_out[0.0].conc_mass_phase_comp[Liq,Ca_2+]",
+        return_key=("Softening_RKT_1", "Effluent out", "Ca"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.precipitation_reactor.properties_out[0.0].conc_mass_phase_comp[Liq,HCO3_-]",
+        return_key=("Softening_RKT_1", "Effluent out", "HCO3"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.precipitation_reactor.properties_out[0.0].conc_mass_phase_comp[Liq,Mg_2+]",
+        return_key=("Softening_RKT_1", "Effluent out", "Mg"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.alkalinity",
+        return_key=("Softening_RKT_1", "Alkalinity"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.acidification_unit.chemical_reactor.reagent_dose[HCl]",
+        return_key=("acid_addition", "Chemical dose", "HCl"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.acidification_unit.chemical_reactor.reagent_dose[H2SO4]",
+        return_key=("acid_addition", "Chemical dose", "H2SO4"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.scaling_tendency[Calcite]",
+        return_key=("Scaling tendency", "Calcite"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.scaling_tendency[Gypsum]",
+        return_key=("Scaling tendency", "Gypsum"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.scaling_tendency[Calcite]",
+        return_key=("HP Scaling tendency", "Calcite"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.scaling_tendency[Gypsum]",
+        return_key=("HP Scaling tendency", "Gypsum"),
+        units="dimensionless",
+    )
+    data_manager.load_data()
     data_manager.display()
     data_manager.select_data(("water_sim_cases", "SW_RO"))
     data_manager.select_data(("water_sim_cases", "SW_HPRO"), add_to_existing=True)
@@ -838,3 +837,9 @@ if __name__ == "__main__":
             regions=regions[hd],
             save_name=f"{water_case}/{water_case}_alkalinity",
         )
+    if show_figs:
+        fig.show()
+
+
+if __name__ == "__main__":
+    main()
