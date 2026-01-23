@@ -3,5 +3,10 @@ name = "reaktoro_enabled_watertap"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
-    "pyomo","idaes-pse>=2.5.0","watertap>=1.0.0"
+    "pyomo",
+    "idaes-pse>=2.5.0",
+    "watertap>=1.0.0",
+    "psPlotKit @ git+https://github.com/avdudchenko/psPlotKit.git@v0.22",
+    "reaktoro-pse @ git+https://github.com/watertap-org/reaktoro-pse.git",
+    "parameter-sweep @ git+https://github.com/watertap-org/parameter-sweep.git", # grab latest version
 ]
