@@ -125,7 +125,7 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         """fixes operation point for pump unit model
         Uses osmotic pressure to initialize pump outlet pressure or user defined pressure
         """
-        if self.config.initialization_pressure is "osmotic_pressure":
+        if self.config.initialization_pressure == "osmotic_pressure":
             init_flags = self.pump.control_volume.initialize()
             self.pump.control_volume.release_state(init_flags)
             pressure_guess = value(
