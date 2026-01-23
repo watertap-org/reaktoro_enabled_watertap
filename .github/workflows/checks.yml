@@ -50,6 +50,12 @@ jobs:
         install-mode:
           - dev
           # - standard
+        pytest_folders:
+          - property_comp
+          - softening_acid_ro_treatment  
+          - softening_acid_ro_validation
+          - flowsheets
+          - core
         python-version:
           - "3.12"
         os:
@@ -94,10 +100,36 @@ jobs:
       - if: matrix.coverage
         name: Enable coverage for pytest
         run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
-      - name: Run pytest
+      - if: matrix.pytest_folders == 'softening_acid_ro_validation'
+        name: Run pytest
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest --pyargs reaktoro_enabled_watertap --verbose
+          pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_generation.py \
+          src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_plotting.py
+      - if: matrix.pytest_folders == 'softening_acid_ro_treatment'
+        name: Run pytest
+        run: |
+          pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
+          pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_generation.py \
+          src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_plotting.py
+      - if: matrix.pytest_folders == 'property_comp'
+        name: Run pytest
+        run: |
+          pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
+          pytest src/reaktoro_enabled_watertap/analysis_scripts/property_comp/
+      - if: matrix.pytest_folders == 'flowsheets'
+        name: Run pytest
+        run: |
+          pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
+          pytest src/reaktoro_enabled_watertap/flowsheets/
+      - if: matrix.pytest_folders == 'core'
+        name: Run pytest
+        run: |
+          pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
+          pytest src/reaktoro_enabled_watertap/costing/ \
+          src/reaktoro_enabled_watertap/unit_models/ \
+          src/reaktoro_enabled_watertap/utils/ \
+          src/reaktoro_enabled_watertap/water_sources/ \
       # - name: Install Jupyter kernel
       #   run: |
       #     jupyter kernelspec list
