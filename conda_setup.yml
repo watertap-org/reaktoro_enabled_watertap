@@ -8,8 +8,4 @@ dependencies:
   - reaktoro
   - pip
   - pip:
-      - watertap
-      - git+https://github.com/watertap-org/reaktoro-pse.git
-      - git+https://github.com/watertap-org/parameter-sweep.git
-      - git+https://github.com/avdudchenko/psPlotKit.git
       - -r requirements-dev.txt
