@@ -116,7 +116,7 @@ jobs:
         name: Run pytest property_comp
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest src/reaktoro_enabled_watertap/analysis_scripts/property_comp/tests/
+          pytest src/reaktoro_enabled_watertap/analysis_scripts/property_comparison/tests/
       - if: matrix.pytest_folders == 'flowsheets'
         name: Run pytest flowsheets
         run: |
