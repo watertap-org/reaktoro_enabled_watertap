@@ -497,9 +497,9 @@ def initialize(m, linear_solver="mumps", tee=False, **kwargs):
     solve_model(m, linear_solver=linear_solver, tee=tee)
     set_optimization(m)
 
-    if m.fs.water_recovery.value < 0.5:
-        m.fs.water_recovery.fix()
-        solve_model(m, linear_solver=linear_solver, tee=tee)
+    # if m.fs.water_recovery.value < 0.5:
+    #     m.fs.water_recovery.fix()
+    #     solve_model(m, linear_solver=linear_solver, tee=tee)
     # else:
     m.fs.water_recovery.fix(0.5)
     solve_model(m, linear_solver=linear_solver, tee=tee)
