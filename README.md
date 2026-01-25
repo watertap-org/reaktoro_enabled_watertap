@@ -1,14 +1,14 @@
 # Reaktoro Enabled Watertap
 
 ## 1 Introduction 
-This is a repository for disseminating Reactor-enabled flowsheet units to use in various analyses, as well as supporting a simpler method for building WaterTap flowsheets using pre-configured unit models. 
+This is a repository for disseminating Reaktoro-enabled flowsheet units to use in various analyses, as well as supporting a simpler method for building WaterTap flowsheets using pre-configured unit models. 
 
 For reaktoro-pse usage refer to [reaktoro-pse github](https://github.com/watertap-org/reaktoro-pse).
 
 For reaktoro usage refer to [reaktoro](https://reaktoro.org/index.html)
 
 ## 2 Example flowsheets
-### a. Reveres osmosis with acid addition and softening as pre-treatment 
+### a. Reverse osmosis with acid addition and softening as pre-treatment 
 
 This is a standard flowsheet used for demonstrating advanced water chemistry modeling with WaterTAP where reaktoro is used to model:
 
@@ -18,7 +18,7 @@ This is a standard flowsheet used for demonstrating advanced water chemistry mod
 
 
 ## 3 Example analysis
-The repository includes example analysis that are featured in publications that are either published, under review, or might be in pre-parathion. 
+The repository includes example analysis that are featured in publications that are either published, under review, or might be in preparation. 
 To reproduce results please review the analysis_scripts folder. 
 
 ### 3.1 Generating analysis data
