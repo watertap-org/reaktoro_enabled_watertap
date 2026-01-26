@@ -1,3 +1,10 @@
+[build-system]
+requires = [
+    "setuptools >= 64",
+    "setuptools_scm >= 7",
+]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "reaktoro_enabled_watertap"
 readme = "README.md"
@@ -18,6 +25,3 @@ markers = [
     "core: marks tests as core (deselect with '-m \"not core\"')",
     "core: marks tests as core (deselect with '-m \"not core\"')",
 ]
-
-[tool.setuptools.package-data]
-reaktoro_enabled_watertap = ["*.yaml",'*.csv']
