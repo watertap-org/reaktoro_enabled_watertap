@@ -41,7 +41,7 @@ jobs:
           black --check .
 
   pytest:
-    name: pytest (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.install-mode }})
+    name: pytest (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.install-mode }}/${{ matrix.pytest_folders }})
     runs-on: ${{ matrix.os-version }}
     needs: [code-formatting]
     strategy:
@@ -83,11 +83,13 @@ jobs:
           miniforge-version: latest
           channels: conda-forge
           activate-environment: reaktoro_enabled_watertap
+          environment-file: conda_setup.yaml
       - name: List directory contents
         run: dir
       - name: Install via conda.yaml
-        run: |
-          conda env update --file conda_setup.yaml
+        run: |          
+          conda info
+          conda list
           pip list
       # - name: Install conda-forge dependencies
       #   run: |
