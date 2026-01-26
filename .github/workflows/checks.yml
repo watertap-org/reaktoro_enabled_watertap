@@ -85,6 +85,7 @@ jobs:
           activate-environment: reaktoro_enabled_watertap
       - name: Install via conda.yaml
         run: |
+          dir
           conda env update --file conda_setup.yml
           pip list
       # - name: Install conda-forge dependencies
@@ -133,15 +134,12 @@ jobs:
         name: Run pytest flowsheets
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest src/reaktoro_enabled_watertap/flowsheets/
+          pytest -m flowsheets
       - if: matrix.pytest_folders == 'core'
         name: Run pytest core
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest src/reaktoro_enabled_watertap/costing/ \
-          src/reaktoro_enabled_watertap/unit_models/ \
-          src/reaktoro_enabled_watertap/utils/ \
-          src/reaktoro_enabled_watertap/water_sources/ \
+          pytest -m core
       # - name: Install Jupyter kernel
       #   run: |
       #     jupyter kernelspec list

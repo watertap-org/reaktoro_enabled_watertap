@@ -5,6 +5,8 @@ from reaktoro_enabled_watertap.analysis_scripts.softening_acid_ro.figure_generat
 )
 
 
+@pytest.mark.analysis
+@pytest.mark.component
 def test_validation_plotting():
     """Test cost breakdown plotting for BGW scenario."""
     try:

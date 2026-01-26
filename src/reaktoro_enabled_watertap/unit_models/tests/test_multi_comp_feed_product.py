@@ -84,6 +84,7 @@ def build_case_with_alk(water, reconcile_using_reaktoro=False):
     return m
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_mc_feed():
     m = build_case("USDA_brackish", False)
@@ -107,6 +108,7 @@ def test_mc_feed():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_mc_feed_with_alk():
     m = build_case_with_alk("USDA_brackish", True)
@@ -134,6 +136,7 @@ def test_mc_feed_with_alk():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_product():
     m = build_case("USDA_brackish", False)
@@ -167,6 +170,7 @@ def test_product():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_with_reaktoro_intialization_feed():
     test_results = {

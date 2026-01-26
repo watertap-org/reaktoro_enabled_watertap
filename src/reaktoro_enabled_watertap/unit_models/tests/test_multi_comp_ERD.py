@@ -38,6 +38,7 @@ from watertap.costing import WaterTAPCosting
 __author__ = "Alexander V. Dudchenko"
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_erd_pressure():
     m = build_case("USDA_brackish", True)

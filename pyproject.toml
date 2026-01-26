@@ -10,3 +10,12 @@ dependencies = [
     "reaktoro-pse @ git+https://github.com/watertap-org/reaktoro-pse.git",
     "parameter-sweep @ git+https://github.com/watertap-org/parameter-sweep.git", # grab latest version
 ]
+
+
+[pytest]
+markers = [
+    "analysis: marks tests as analysis (deselect with '-m \"not analysis\"')",
+    "flowsheets: marks tests as flowsheets (deselect with '-m \"not flowsheets\"')",
+    "core: marks tests as core (deselect with '-m \"not core\"')",
+    "core: marks tests as core (deselect with '-m \"not core\"')",
+]

@@ -8,6 +8,8 @@ from reaktoro_enabled_watertap.analysis_scripts.softening_acid_ro.figure_generat
 )
 
 
+@pytest.mark.analysis
+@pytest.mark.component
 def test_cost_breakdown_bgw():
     """Test cost breakdown plotting for BGW scenario."""
     try:
@@ -16,6 +18,8 @@ def test_cost_breakdown_bgw():
         pytest.fail(f"cost_breakdown_bgw.main() raised an exception: {e}")
 
 
+@pytest.mark.analysis
+@pytest.mark.component
 def test_cost_breakdown_hpro():
     """Test cost breakdown plotting for HPro scenario."""
     try:
@@ -24,6 +28,8 @@ def test_cost_breakdown_hpro():
         pytest.fail(f"cost_breakdown_hpro.main() raised an exception: {e}")
 
 
+@pytest.mark.analysis
+@pytest.mark.component
 def test_plotting_performance_regions():
     """Test plotting performance regions."""
     try:

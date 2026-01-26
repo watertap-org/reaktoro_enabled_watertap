@@ -5,6 +5,7 @@ from reaktoro_enabled_watertap.analysis_scripts.property_comparison.figure_gener
 )
 
 
+@pytest.mark.analysis
 def test_prop_plotting():
     """Test cost breakdown plotting for BGW scenario."""
     try:

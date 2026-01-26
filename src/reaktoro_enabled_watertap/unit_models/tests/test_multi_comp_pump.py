@@ -36,6 +36,7 @@ from watertap.costing import WaterTAPCosting
 __author__ = "Alexander V. Dudchenko"
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_osmotic_init_pressure():
     m = build_case("USDA_brackish", True)
@@ -69,6 +70,7 @@ def test_osmotic_init_pressure():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_user_pressure():
     m = build_case("USDA_brackish", True)
@@ -102,6 +104,7 @@ def test_user_pressure():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_costing():
     m = build_case("USDA_brackish", True)

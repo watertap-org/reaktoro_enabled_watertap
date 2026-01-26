@@ -13,6 +13,7 @@ import os
 import numpy
 
 
+@pytest.mark.analysis
 @pytest.mark.component
 def test_stability_sweep():
     work_path = get_lib_path()

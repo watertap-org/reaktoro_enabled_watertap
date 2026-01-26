@@ -17,6 +17,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
         "Seawater.yaml",
     ],
 )
+@pytest.mark.flowsheets
 @pytest.mark.component
 def test_props(water):
     expected_results = {

@@ -12,6 +12,7 @@ from psPlotKit.data_manager.ps_data_manager import psDataManager
 import os
 
 
+@pytest.mark.analysis
 @pytest.mark.component
 def test_treatment_sweep():
     work_path = get_lib_path()
