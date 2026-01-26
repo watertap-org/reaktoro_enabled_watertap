@@ -87,8 +87,7 @@ jobs:
       - name: Install (idaes-solvers)
         run: |
           idaes get-extensions
-      - if: matrix.coverage
-        name: Enable coverage for pytest
+      - name: Enable coverage for pytest
         run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
       - if: matrix.pytest_folders == 'softening_acid_ro_stability'
         name: Run pytest softening_acid_ro_stability
@@ -147,16 +146,6 @@ jobs:
           #- linux
           - win64
           # - macos
-        include:
-          #- os: linux
-          # os-version: ubuntu-22.04 0 remove till we get ma27
-          - os: win64
-            os-version: windows-2022
-          # - os: macos
-          #   os-version: macos-14
-          - install-mode: dev
-            python-version: "3.12"  # choice of Python version is arbitrary among those in matrix
-            coverage: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -174,9 +163,6 @@ jobs:
       - name: Install (idaes-solvers)
         run: |
           idaes get-extensions
-      - if: matrix.coverage
-        name: Enable coverage for pytest
-        run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
       - if: matrix.pytest_folders == 'flowsheets'
         name: Run pytest flowsheets
         run: |
@@ -187,10 +173,4 @@ jobs:
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest --pyargs reaktoro_enabled_watertap -m core
-      - name: Upload coverage report as job artifact
-        if: matrix.coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-${{ matrix.os }}-${{ matrix.pytest_folders }}
-          path: coverage.xml
-          if-no-files-found: error
+
