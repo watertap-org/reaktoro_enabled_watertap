@@ -82,7 +82,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           channels: conda-forge
-          activate-environment: rew-dev
+          activate-environment: reaktoro_enabled_watertap
       - if: matrix.install-mode == 'dev'
         name: Install via conda.yaml
         run: |
@@ -107,25 +107,25 @@ jobs:
       - if: matrix.coverage
         name: Enable coverage for pytest
         run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
-      - if: matrix.pytest_folders == 'softening_acid_ro_stability'
+      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'softening_acid_ro_stability'
         name: Run pytest softening_acid_ro_stability
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_stability_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_stability_data_plotting.py
-      - if: matrix.pytest_folders == 'softening_acid_ro_validation'
+      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'softening_acid_ro_validation'
         name: Run pytest softening_acid_ro_validation
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_plotting.py
-      - if: matrix.pytest_folders == 'softening_acid_ro_treatment'
+      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'softening_acid_ro_treatment'
         name: Run pytest softening_acid_ro_treatment
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_plotting.py
-      - if: matrix.pytest_folders == 'property_comp'
+      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'property_comp'
         name: Run pytest property_comp
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
@@ -134,12 +134,12 @@ jobs:
         name: Run pytest flowsheets
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest -m flowsheets
+          pytest --pyargs reaktoro_enabled_watertap -m flowsheets
       - if: matrix.pytest_folders == 'core'
         name: Run pytest core
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
-          pytest -m core
+          pytest --pyargs reaktoro_enabled_watertap -m core
       # - name: Install Jupyter kernel
       #   run: |
       #     jupyter kernelspec list
