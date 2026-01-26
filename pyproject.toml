@@ -11,7 +11,6 @@ dependencies = [
     "parameter-sweep @ git+https://github.com/watertap-org/parameter-sweep.git", # grab latest version
 ]
 
-
 [pytest]
 markers = [
     "analysis: marks tests as analysis (deselect with '-m \"not analysis\"')",
@@ -21,4 +20,4 @@ markers = [
 ]
 
 [tool.setuptools.package-data]
-["*.yaml",'*.csv']
+reaktoro_enabled_watertap = ["*.yaml",'*.csv']
