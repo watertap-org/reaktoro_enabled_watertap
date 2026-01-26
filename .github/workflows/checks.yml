@@ -41,7 +41,7 @@ jobs:
           black --check .
 
   pytest-dev:
-    name: pytest (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.install-mode }}/${{ matrix.pytest_folders }})
+    name: pytest-dev (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.pytest_folders }})
     runs-on: ${{ matrix.os-version }}
     needs: [code-formatting]
     strategy:
@@ -69,7 +69,6 @@ jobs:
           #   os-version: macos-14
           - install-mode: dev
             python-version: "3.12"  # choice of Python version is arbitrary among those in matrix
-            coverage: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -131,7 +130,7 @@ jobs:
           if-no-files-found: error
 
   pytest-standard:
-    name: pytest (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.pytest_folders }})
+    name: pytest-standard (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.pytest_folders }})
     runs-on: ${{ matrix.os-version }}
     needs: [code-formatting]
     strategy:
