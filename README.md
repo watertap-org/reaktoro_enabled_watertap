@@ -78,7 +78,7 @@ d. (Optional) Run analysis tests, this will run analysis code in all of the anal
 Install in your working environment inside conda
 
     conda install cyipopt reaktoro
-    pip install git+https://github.com/watertap-org/reaktoro-pse.git
+    pip install git+https://github.com/watertap-org/reaktoro_enabled_watertap.git
 
 Import any of the flowsheet untis or flowsheet into your analysis code using
 

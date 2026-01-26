@@ -19,3 +19,6 @@ markers = [
     "core: marks tests as core (deselect with '-m \"not core\"')",
     "core: marks tests as core (deselect with '-m \"not core\"')",
 ]
+
+[tool.setuptools.package-data]
+["*.yaml",'*.csv']
