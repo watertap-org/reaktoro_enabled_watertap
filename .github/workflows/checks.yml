@@ -82,14 +82,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           channels: conda-forge
-          activate-environment: reaktoro_enabled_watertap
-          environment-file: conda_setup.yaml
+          activate-environment: rew-dev
       - name: List directory contents
         run: dir
       - name: Install via conda.yaml
-        run: |          
-          conda info
-          conda list
+        run: |
+          conda env update --file conda_setup.yaml
           pip list
       # - name: Install conda-forge dependencies
       #   run: |
