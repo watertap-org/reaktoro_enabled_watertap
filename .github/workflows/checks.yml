@@ -40,16 +40,13 @@ jobs:
         run: |
           black --check .
 
-  pytest:
+  pytest-dev:
     name: pytest (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.install-mode }}/${{ matrix.pytest_folders }})
     runs-on: ${{ matrix.os-version }}
     needs: [code-formatting]
     strategy:
       fail-fast: false
       matrix:
-        install-mode:
-          - dev
-          - standard
         pytest_folders:
           - property_comp
           - softening_acid_ro_treatment  
@@ -73,59 +70,45 @@ jobs:
           - install-mode: dev
             python-version: "3.12"  # choice of Python version is arbitrary among those in matrix
             coverage: "true"
-
     steps:
-      - if: matrix.install-mode == 'dev'
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           channels: conda-forge
           activate-environment: reaktoro_enabled_watertap
-      - if: matrix.install-mode == 'dev'
-        name: Install via conda.yaml
+      - name: Install via conda.yaml
         run: |
           conda env update --file conda_setup.yaml
           pip list
-      # - name: Install conda-forge dependencies
-      #   run: |
-      #     conda install reaktoro>=2.13 cyipopt>=1.4.1
-      # - if: matrix.install-mode == 'dev'
-      #   name: Install (dev)
-      #   run: |
-      #     pip install -r requirements-dev.txt
-      #     pip list
-      - if: matrix.install-mode == 'standard'
-        name: Install (standard)
-        run: |
-          conda install reaktoro cyipopt
-          pip install "git+${{ format('{0}/{1}@{2}', github.server_url, github.repository, github.ref) }}"
       - name: Install (idaes-solvers)
         run: |
           idaes get-extensions
       - if: matrix.coverage
         name: Enable coverage for pytest
         run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
-      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'softening_acid_ro_stability'
+      - if: matrix.pytest_folders == 'softening_acid_ro_stability'
         name: Run pytest softening_acid_ro_stability
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_stability_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_stability_data_plotting.py
-      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'softening_acid_ro_validation'
+      - if: matrix.pytest_folders == 'softening_acid_ro_validation'
         name: Run pytest softening_acid_ro_validation
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_validation_data_plotting.py
-      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'softening_acid_ro_treatment'
+      - if: matrix.pytest_folders == 'softening_acid_ro_treatment'
         name: Run pytest softening_acid_ro_treatment
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_generation.py \
           src/reaktoro_enabled_watertap/analysis_scripts/softening_acid_ro/tests/test_treatment_data_plotting.py
-      - if: matrix.install-mode == 'dev' && matrix.pytest_folders == 'property_comp'
+      - if: matrix.pytest_folders == 'property_comp'
         name: Run pytest property_comp
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
@@ -140,19 +123,70 @@ jobs:
         run: |
           pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
           pytest --pyargs reaktoro_enabled_watertap -m core
-      # - name: Install Jupyter kernel
-      #   run: |
-      #     jupyter kernelspec list
-      #     python -m ipykernel install --user --name "${{ env.KERNEL_NAME }}"
-      #     jupyter kernelspec list
-      # - name: Run pytest with nbmake
-      #   run: |
-      #     # watertap is needed to run the following notebooks in src/reaktoro_enabled_watertap/tutorials:
-      #     # - basic_reaktoro_block_interaction.ipynb
-      #     # - integration_with_ro.ipynb
-      #     pip install watertap
-      #     pip install "idaes-pse>=2.8.0" 
-      #     pytest --nbmake --nbmake-kernel="${{ env.KERNEL_NAME }}" src/reaktoro_enabled_watertap/tutorials/*.ipynb
+      - name: Upload coverage report as job artifact
+        if: matrix.coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.os }}-${{ matrix.pytest_folders }}
+          path: coverage.xml
+          if-no-files-found: error
+
+  pytest-standard:
+    name: pytest (${{ matrix.os }}/${{ matrix.python-version }}/${{ matrix.pytest_folders }})
+    runs-on: ${{ matrix.os-version }}
+    needs: [code-formatting]
+    strategy:
+      fail-fast: false
+      matrix:
+        pytest_folders:
+          - flowsheets
+          - core
+        python-version:
+          - "3.12"
+        os:
+          #- linux
+          - win64
+          # - macos
+        include:
+          #- os: linux
+          # os-version: ubuntu-22.04 0 remove till we get ma27
+          - os: win64
+            os-version: windows-2022
+          # - os: macos
+          #   os-version: macos-14
+          - install-mode: dev
+            python-version: "3.12"  # choice of Python version is arbitrary among those in matrix
+            coverage: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniforge-version: latest
+          channels: conda-forge
+          activate-environment: reaktoro_enabled_watertap
+      - name: Install (standard)
+        run: |
+          conda install reaktoro cyipopt
+          pip install "git+${{ format('{0}/{1}@{2}', github.server_url, github.repository, github.ref) }}"
+      - name: Install (idaes-solvers)
+        run: |
+          idaes get-extensions
+      - if: matrix.coverage
+        name: Enable coverage for pytest
+        run: echo PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-report=xml" >> $GITHUB_ENV
+      - if: matrix.pytest_folders == 'flowsheets'
+        name: Run pytest flowsheets
+        run: |
+          pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
+          pytest --pyargs reaktoro_enabled_watertap -m flowsheets
+      - if: matrix.pytest_folders == 'core'
+        name: Run pytest core
+        run: |
+          pip install pytest  # ensure pytest is installed (should do nothing if already present from requirements-dev.txt)
+          pytest --pyargs reaktoro_enabled_watertap -m core
       - name: Upload coverage report as job artifact
         if: matrix.coverage
         uses: actions/upload-artifact@v4
