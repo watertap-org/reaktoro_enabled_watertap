@@ -62,25 +62,24 @@ jobs:
         os:
           #- linux
           - win64
-          # - macos
         include:
           #- os: linux
           # os-version: ubuntu-22.04 0 remove till we get ma27
           - os: win64
             os-version: windows-2022
-          # - os: macos
-          #   os-version: macos-14
           - install-mode: dev
             python-version: "3.12"  # choice of Python version is arbitrary among those in matrix
             coverage: "true"
         exclude:
           - install-mode: standard
-            pytest_folders: 
-              - property_comp
-              - softening_acid_ro_treatment  
-              - softening_acid_ro_validation
-              - softening_acid_ro_stability
-    steps:
+            pytest_folders: property_comp
+          - install-mode: standard
+            pytest_folders: softening_acid_ro_treatment   
+          - install-mode: standard
+            pytest_folders: softening_acid_ro_validation   
+          - install-mode: standard
+            pytest_folders: softening_acid_ro_stability   
+    steps:                        
       - if: matrix.install-mode == 'dev'
         uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
@@ -145,3 +144,4 @@ jobs:
           name: coverage-report-${{ matrix.os }}-${{ matrix.pytest_folders }}
           path: coverage.xml
           if-no-files-found: error
+           
