@@ -83,9 +83,8 @@ jobs:
           miniforge-version: latest
           channels: conda-forge
           activate-environment: rew-dev
-      - name: List directory contents
-        run: dir
-      - name: Install via conda.yaml
+      - if: matrix.install-mode == 'dev'
+        name: Install via conda.yaml
         run: |
           conda env update --file conda_setup.yaml
           pip list
