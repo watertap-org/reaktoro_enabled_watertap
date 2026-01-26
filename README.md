@@ -56,7 +56,7 @@ b. Clone/download this repository and open the command prompt inside the reposit
 
 c. Run 
 
-     conda env create -f conda_setup.yml
+     conda env create -f conda_setup.yaml
 
 d. Install IDAES solvers if you have not done so before:
 

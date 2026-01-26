@@ -83,10 +83,11 @@ jobs:
           miniforge-version: latest
           channels: conda-forge
           activate-environment: reaktoro_enabled_watertap
+      - name: List directory contents
+        run: dir
       - name: Install via conda.yaml
         run: |
-          dir
-          conda env update --file conda_setup.yml
+          conda env update --file conda_setup.yaml
           pip list
       # - name: Install conda-forge dependencies
       #   run: |
