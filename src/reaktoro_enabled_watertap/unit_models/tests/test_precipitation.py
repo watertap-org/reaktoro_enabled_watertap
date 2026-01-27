@@ -40,6 +40,7 @@ from watertap.costing import WaterTAPCosting
 __author__ = "Alexander V. Dudchenko"
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_precip_default():
     m = build_case("USDA_brackish", True)
@@ -74,6 +75,7 @@ def test_precip_default():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_precip_no_reaktoro_default():
     m = build_case("USDA_brackish", True)
@@ -109,6 +111,7 @@ def test_precip_no_reaktoro_default():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_costing():
     m = build_case("USDA_brackish", True)
@@ -159,6 +162,7 @@ def test_costing():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_precipitation_with_all_options():
     m = build_case("USDA_brackish", True)
@@ -213,6 +217,7 @@ def test_precipitation_with_all_options():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_precipitation_with_custom_options():
     m = build_case("USDA_brackish", True)

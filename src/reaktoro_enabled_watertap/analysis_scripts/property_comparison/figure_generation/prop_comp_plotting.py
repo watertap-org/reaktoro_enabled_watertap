@@ -99,11 +99,11 @@ def get_val_data(dm, case, acid, data_key):
     return x, y
 
 
-if __name__ == "__main__":
+def main(show_figs=False):
     work_path = get_lib_path()
+    global save_location
     save_location = (
-        work_path
-        / "analysis_scripts/property_comparison/figure_generation/validation_figures/"
+        work_path / "analysis_scripts/property_comparison/figure_generation/"
     )
     data_manager = psDataManager(
         str(
@@ -112,46 +112,44 @@ if __name__ == "__main__":
         ),
     )
 
-    import_keys = [
-        {
-            "filekey": "fs.water_recovery",
-            "return_key": "Water recovery",
-            "units": "%",
-        },
-        {
-            "filekey": "fs.feed_tds",
-            "return_key": "TDS",
-        },
-        {
-            "filekey": f"fs.modified_properties[osmoticPressure,H2O]",
-            "return_key": ("Reaktoro", "osmotic pressure"),
-            "assign_units": "Pa",
-            "conversion_factor": 1e-5,
-        },
-        {
-            "filekey": f"fs.seawater_feed.properties[0.0].pressure_osm_phase[Liq]",
-            "return_key": ("Watertap Seawater property package", "osmotic pressure"),
-            "units": "bar",
-        },
-        {
-            "filekey": f"fs.nacl_feed.properties[0.0].pressure_osm_phase[Liq]",
-            "return_key": ("Watertap NaCl property package", "osmotic pressure"),
-            "units": "bar",
-        },
-        {
-            "filekey": f"fs.multicomp_feed.properties[0.0].dens_mass_phase[Liq]",
-            "return_key": ("Reaktoro", "density"),
-        },
-        {
-            "filekey": f"fs.seawater_feed.properties[0.0].dens_mass_phase[Liq]",
-            "return_key": ("Watertap Seawater property package", "density"),
-        },
-        {
-            "filekey": f"fs.nacl_feed.properties[0.0].dens_mass_phase[Liq]",
-            "return_key": ("Watertap NaCl property package", "density"),
-        },
-    ]
-    data_manager.load_data(import_keys)
+    data_manager.register_data_key(
+        file_key="fs.water_recovery",
+        return_key="Water recovery",
+        units="%",
+    )
+    data_manager.register_data_key(
+        file_key="fs.feed_tds",
+        return_key="TDS",
+    )
+    data_manager.register_data_key(
+        file_key="fs.modified_properties[osmoticPressure,H2O]",
+        return_key=("Reaktoro", "osmotic pressure"),
+        assign_units="Pa",
+        conversion_factor=1e-5,
+    )
+    data_manager.register_data_key(
+        file_key="fs.seawater_feed.properties[0.0].pressure_osm_phase[Liq]",
+        return_key=("Watertap Seawater property package", "osmotic pressure"),
+        units="bar",
+    )
+    data_manager.register_data_key(
+        file_key="fs.nacl_feed.properties[0.0].pressure_osm_phase[Liq]",
+        return_key=("Watertap NaCl property package", "osmotic pressure"),
+        units="bar",
+    )
+    data_manager.register_data_key(
+        file_key="fs.multicomp_feed.properties[0.0].dens_mass_phase[Liq]",
+        return_key=("Reaktoro", "density"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.seawater_feed.properties[0.0].dens_mass_phase[Liq]",
+        return_key=("Watertap Seawater property package", "density"),
+    )
+    data_manager.register_data_key(
+        file_key="fs.nacl_feed.properties[0.0].dens_mass_phase[Liq]",
+        return_key=("Watertap NaCl property package", "density"),
+    )
+    data_manager.load_data()
     data_manager.display()
     water_reference = {
         "SW": "seawater",
@@ -188,7 +186,9 @@ if __name__ == "__main__":
             ylabel="Osmotic pressure (bar)",
         )
         fig.add_legend()
-        fig.save_fig(f"figures/{water_reference[water]}_osmotic_pressure_comparison")
+        fig.save_fig(
+            f"{save_location}/figures/{water_reference[water]}_osmotic_pressure_comparison"
+        )
     for water in water_reference.keys():
         fig = figureGenerator()
         fig.init_figure()
@@ -218,5 +218,12 @@ if __name__ == "__main__":
             ylabel="Density (kg/m³)",
         )
         fig.add_legend()
-        fig.save_fig(f"figures/{water_reference[water]}_density_comparison")
-    fig.show()
+        fig.save_fig(
+            f"{save_location}/figures/{water_reference[water]}_density_comparison"
+        )
+    if show_figs:
+        fig.show()
+
+
+if __name__ == "__main__":
+    main()

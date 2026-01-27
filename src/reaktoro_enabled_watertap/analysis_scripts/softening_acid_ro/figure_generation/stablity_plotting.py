@@ -42,7 +42,7 @@ def get_data(manager, step, hessian, water_sources, key):
     return data
 
 
-if __name__ == "__main__":
+def main(show_figs=True):
     work_path = get_lib_path()
     save_location = (
         work_path
@@ -54,29 +54,22 @@ if __name__ == "__main__":
             / "analysis_scripts/softening_acid_ro/data_generation/output/stability_sweep_analysisType_stability_sweep.h5"
         ),
     )
-
-    import_keys = [
-        # {
-        #     "filekey": "fs.costing.LCOW",
-        #     "return_key": "LCOW",
-        # },
-        {
-            "filekey": f"fs.ipopt_iterations[Objective function evaluations]",
-            "return_key": "iterations",
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.unscaled_ipopt_result[dual_infeasibility]",
-            "return_key": "Dual infeasibility",
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.unscaled_ipopt_result[overall_nlp_error]",
-            "return_key": "Overall NLP error",
-            "units": "dimensionless",
-        },
-    ]
-    data_manager.load_data(import_keys)
+    data_manager.register_data_key(
+        file_key="fs.ipopt_iterations[Objective function evaluations]",
+        return_key="iterations",
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.unscaled_ipopt_result[dual_infeasibility]",
+        return_key="Dual infeasibility",
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.unscaled_ipopt_result[overall_nlp_error]",
+        return_key="Overall NLP error",
+        units="dimensionless",
+    )
+    data_manager.load_data()
     data_manager.display()
     # assert False
     hessians = [
@@ -276,4 +269,9 @@ if __name__ == "__main__":
         )
         fig.add_legend()
         fig.save_fig(str(save_location) + "\\" + fig_type)
-    fig.show()
+    if show_figs:
+        fig.show()
+
+
+if __name__ == "__main__":
+    main()

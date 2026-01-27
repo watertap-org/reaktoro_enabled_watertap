@@ -12,6 +12,7 @@ from idaes.core.util.model_statistics import degrees_of_freedom
 __author__ = "Alexander V. Dudchenko"
 
 
+@pytest.mark.flowsheets
 @pytest.mark.parametrize("costing", ["watertap_default", "Amusat_et_al_2024"])
 def test_softening_acid_ro_seawater_with_hpro(costing):
     solution_results = {
@@ -94,6 +95,7 @@ def test_softening_acid_ro_seawater_with_hpro(costing):
         "Seawater.yaml",
     ],
 )
+@pytest.mark.flowsheets
 @pytest.mark.component
 def test_softening_acid_ro_default_costing(water):
     solution_results = {
@@ -194,6 +196,7 @@ def test_softening_acid_ro_default_costing(water):
         "Seawater.yaml",
     ],
 )
+@pytest.mark.flowsheets
 @pytest.mark.component
 def test_softening_acid_ro_amusat_costing(water):
     solution_results = {

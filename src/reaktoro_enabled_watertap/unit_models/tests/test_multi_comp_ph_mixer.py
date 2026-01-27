@@ -47,6 +47,7 @@ from pyomo.environ import (
 __author__ = "Alexander V. Dudchenko"
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_mixing_sea_brackish_water():
     mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
@@ -124,6 +125,7 @@ def test_mixing_sea_brackish_water():
     )
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_mixing_sea_brackish_water_no_rkt():
     mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")

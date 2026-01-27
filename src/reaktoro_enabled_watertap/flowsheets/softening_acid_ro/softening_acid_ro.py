@@ -319,7 +319,7 @@ def build_model(
             default_costing_package_kwargs={
                 "costing_method_arguments": {"ro_type": "high_pressure"}
             },
-            target_recovery=0.3,
+            target_recovery=0.4,
         )
         m.fs.product_mixer = MixerPhUnit(
             default_property_package=m.fs.properties,
@@ -500,8 +500,8 @@ def initialize(m, linear_solver="mumps", tee=False, **kwargs):
     if m.fs.water_recovery.value < 0.5:
         m.fs.water_recovery.fix()
         solve_model(m, linear_solver=linear_solver, tee=tee)
-    # else:
-    m.fs.water_recovery.fix(0.5)
+    else:
+        m.fs.water_recovery.fix(0.5)
     solve_model(m, linear_solver=linear_solver, tee=tee)
     print("--------------Initialization complete--------")
 
@@ -537,7 +537,7 @@ def test_func(m, **kwargs):
     return True
 
 
-def solve_model(m, tee=True, linear_solver="mumps", **kwargs):
+def solve_model(m, tee=False, linear_solver="mumps", **kwargs):
     if linear_solver == "mumps":
         pivtol = 1e-3
         maxpivtol = 1e0

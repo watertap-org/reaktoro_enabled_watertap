@@ -99,7 +99,8 @@ def get_val_data(dm, case, acid, data_key):
     return x, y
 
 
-if __name__ == "__main__":
+def main(show_figs=True):
+    global save_location
     work_path = get_lib_path()
     save_location = (
         work_path
@@ -125,54 +126,51 @@ if __name__ == "__main__":
             / "analysis_scripts/softening_acid_ro/figure_generation/validation_data/bw_onestage_medium_capacity_rightdensity.csv"
         )
     )
-
-    import_keys = [
-        {
-            "filekey": "fs.water_recovery",
-            "return_key": "Water recovery",
-            "units": "%",
-        },
-        {
-            "filekey": "fs.costing.LCOW",
-            "return_key": "LCOW",
-        },
-        {
-            "filekey": f"fs.softening_unit.precipitation_reactor.reagent_dose[Na2CO3]",
-            "return_key": ("softening chemical dose", "Soda ash"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.acidification_unit.chemical_reactor.reagent_dose[HCl]",
-            "return_key": ("acid addition dose", "HCl"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.acidification_unit.chemical_reactor.reagent_dose[H2SO4]",
-            "return_key": ("acid addition dose", "H2SO4"),
-            "units": "PPM",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.scaling_tendency[Calcite]",
-            "return_key": ("Scaling tendency", "Calcite"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.ro_unit.ro_unit.scaling_tendency[Gypsum]",
-            "return_key": ("Scaling tendency", "Gypsum"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.scaling_tendency[Calcite]",
-            "return_key": ("HP Scaling tendency", "Calcite"),
-            "units": "dimensionless",
-        },
-        {
-            "filekey": f"fs.hpro_unit.ro_unit.scaling_tendency[Gypsum]",
-            "return_key": ("HP Scaling tendency", "Gypsum"),
-            "units": "dimensionless",
-        },
-    ]
-    data_manager.load_data(import_keys)
+    data_manager.register_data_key(
+        file_key="fs.water_recovery",
+        return_key="Water recovery",
+        units="%",
+    )
+    data_manager.register_data_key(
+        file_key="fs.costing.LCOW",
+        return_key="LCOW",
+    )
+    data_manager.register_data_key(
+        file_key="fs.softening_unit.precipitation_reactor.reagent_dose[Na2CO3]",
+        return_key=("softening chemical dose", "Soda ash"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.acidification_unit.chemical_reactor.reagent_dose[HCl]",
+        return_key=("acid addition dose", "HCl"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.acidification_unit.chemical_reactor.reagent_dose[H2SO4]",
+        return_key=("acid addition dose", "H2SO4"),
+        units="PPM",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.scaling_tendency[Calcite]",
+        return_key=("Scaling tendency", "Calcite"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.ro_unit.ro_unit.scaling_tendency[Gypsum]",
+        return_key=("Scaling tendency", "Gypsum"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.scaling_tendency[Calcite]",
+        return_key=("HP Scaling tendency", "Calcite"),
+        units="dimensionless",
+    )
+    data_manager.register_data_key(
+        file_key="fs.hpro_unit.ro_unit.scaling_tendency[Gypsum]",
+        return_key=("HP Scaling tendency", "Gypsum"),
+        units="dimensionless",
+    )
+    data_manager.load_data()
     data_manager.select_data(("water_sim_cases", "SW_RO"))
     data_manager.select_data(("water_sim_cases", "SW_HPRO"), add_to_existing=True)
     data_manager.display()
@@ -328,6 +326,7 @@ if __name__ == "__main__":
         for acid, marker in acids.items():
             dm = case_details["dm"]
             vd = case_details["val_data"]
+            dm.display()
             if case == "Seawater":
 
                 x, y = get_val_data(
@@ -435,4 +434,9 @@ if __name__ == "__main__":
             ylabel="Scaling Tendency (Gypsum)",
             yticks=yticks,
         )
-        fig.show()
+        if show_figs:
+            fig.show()
+
+
+if __name__ == "__main__":
+    main()

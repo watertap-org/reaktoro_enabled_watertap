@@ -17,7 +17,7 @@ from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 __author__ = "Alexander V. Dudchenko"
 
 
-if __name__ == "__main__":
+def main(show_figs=True):
     work_path = get_lib_path()
     save_location = (
         work_path / "analysis_scripts/softening_acid_ro/figure_generation/cost_figures/"
@@ -118,6 +118,7 @@ if __name__ == "__main__":
             wr,
             save_folder=save_location,
             save_name="{}".format(case[1]),
+            show_fig=show_figs,
         )
         cost_plotter.define_area_groups(
             [
@@ -154,3 +155,7 @@ if __name__ == "__main__":
                 edgecolor=None,
             )
         cost_plotter.generate_figure()
+
+
+if __name__ == "__main__":
+    main()

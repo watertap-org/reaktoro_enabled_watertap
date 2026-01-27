@@ -1,0 +1,11 @@
+name: reaktoro_enabled_watertap
+channels: 
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - cyipopt
+  - reaktoro
+  - pip
+  - pip:
+      - -r requirements-dev.txt

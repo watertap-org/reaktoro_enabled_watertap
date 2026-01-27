@@ -56,18 +56,29 @@ b. Clone/download this repository and open the command prompt inside the reposit
 
 c. Run 
 
-     conda env create -f conda_setup.yml
+     conda env create -f conda_setup.yaml
 
-d. Run tests:
+d. Install IDAES solvers if you have not done so before:
 
-    pytest 
+    idaes get-extensions
 
+e. Run core tests to verify all units and core tests pass
+
+    pytest -m core
+
+d. (Optional) Run flowsheet tests, these could take upto 10 to 60 min to complete
+
+    pytest -m flowsheets
+
+d. (Optional) Run analysis tests, this will run analysis code in all of the analysis folders and can take significant time and compute, depending on system (3-10 hours)
+
+    pytest -m analysis
 #### 6.2 Using models and tools in analysis
 
 Install in your working environment inside conda
 
     conda install cyipopt reaktoro
-    pip install git+https://github.com/watertap-org/reaktoro-pse.git
+    pip install git+https://github.com/watertap-org/reaktoro_enabled_watertap.git
 
 Import any of the flowsheet untis or flowsheet into your analysis code using
 

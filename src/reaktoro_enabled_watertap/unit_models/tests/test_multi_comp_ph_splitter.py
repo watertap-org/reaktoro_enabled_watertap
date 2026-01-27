@@ -47,6 +47,7 @@ from pyomo.environ import (
 __author__ = "Alexander V. Dudchenko"
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_splitter():
     mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
@@ -123,6 +124,7 @@ def test_splitter():
         assert m.fs.splitter.splitter.split_fraction[0, port].fixed == False
 
 
+@pytest.mark.core
 @pytest.mark.component
 def test_splitter_3_ports():
     mcas_props, USDA_feed_specs = get_source_water_data(f"USDA_brackish.yaml")
