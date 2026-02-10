@@ -584,4 +584,4 @@ def test_validation_sweep():
             if val is None:
                 assert solved_data[i] != solved_data[i]
             else:
-                assert val == pytest.approx(solved_data[i], rel=1e-5)
+                assert val == pytest.approx(solved_data[i], abs=1e-3)

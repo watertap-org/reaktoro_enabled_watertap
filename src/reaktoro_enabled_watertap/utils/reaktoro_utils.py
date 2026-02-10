@@ -296,7 +296,7 @@ class ReaktoroOptionsContainer(dict):
         ## ensure that when we provide composition it is not
         ## super saturated!
         if option == "composition":
-            ## we assume that values for composition wer enot initalized
+            ## we assume that values for composition were not initialized
             # on build, and thus need to be adjusted to remove
             # saturation, this will occur when all values are the same
 
