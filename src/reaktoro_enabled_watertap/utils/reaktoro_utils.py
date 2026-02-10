@@ -286,7 +286,7 @@ class ReaktoroOptionsContainer(dict):
         self["system_state"][option] = value
 
     def system_state_modifier_option(self, option, value):
-        self["system_state"][option] = value
+        self["system_state_modifier"][option] = value
 
     def aqueous_phase_option(self, option, value):
         self["aqueous_phase"][option] = value

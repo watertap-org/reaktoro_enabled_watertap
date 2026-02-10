@@ -25,6 +25,10 @@ def calculate_scale_from_dependent_vars(var, constraint, dependent_vars):
     scales = [iscale.get_scaling_factor(v) for v in dependent_vars]
     # Calculate the value of the variable using the constraint
     for v, scale in zip(dependent_vars, scales):
+        if scale is None:
+            raise ValueError(
+                f"Cannot calculate scale for variable {v.name} with unknown scale factor"
+            )
         v.fix(1 / scale)
         # print("Fixed ", v.name, 1 / scale)
     calculate_variable_from_constraint(var, constraint)
@@ -58,7 +62,7 @@ def calculate_scale_from_dependent_vars(var, constraint, dependent_vars):
 
 
 def get_vars_from_expr(var_list, expr):
-    if isinstance(expr, float) == False and expr.is_expression_type():
+    if isinstance(expr, (int, float)) == False and expr.is_expression_type():
         for arg in expr.args:
             get_arg = get_vars_from_expr(var_list, arg)
             if get_arg is not None:
@@ -74,7 +78,7 @@ def get_scale_from_expr(expr):
     preset_values = []
     preset_states = []
     for v in var_list:
-        if isinstance(v, float) == False and v.is_variable_type():
+        if isinstance(v, (int, float)) == False and v.is_variable_type():
             found_vars.append(v)
             preset_values.append(v.value)
             preset_states.append(v.fixed)
@@ -129,17 +133,19 @@ def scale_costing_block(costing_block):
             iscale.set_scaling_factor(cost_value, cost_scale)
         flow_costs[ftype] = cost_scale
 
-    print("Capital cost scaling factor: ", capital_costing_factor)
-    print("Operating cost scaling factor: ", operating_costing_factor)
-    print("Variable cost scaling factor: ", variable_costing_factor)
-    print("Flow cost types: ", flow_cost_types)
     if capital_costing_factor == 0:
         capital_costing_factor = 1
     if operating_costing_factor == 0:
         operating_costing_factor = 1
     if variable_costing_factor == 0:
         variable_costing_factor = 1
-
+    operating_costing_factor = 1 / (
+        1 / operating_costing_factor + 1 / capital_costing_factor * 0.03
+    )  # account for small fixed cost due to capital cost
+    print("Capital cost scaling factor: ", capital_costing_factor)
+    print("Operating cost scaling factor: ", operating_costing_factor)
+    print("Variable cost scaling factor: ", variable_costing_factor)
+    print("Flow cost types: ", flow_cost_types)
     # iscale.set_scaling_factor(costing_block.electricity_cost, 100)
 
     iscale.set_scaling_factor(costing_block.utilization_factor, 1)
@@ -188,6 +194,10 @@ def scale_costing_block(costing_block):
     iscale.constraint_scaling_transform(
         costing_block.aggregate_variable_operating_cost_constraint,
         variable_costing_factor,
+    )
+    iscale.constraint_scaling_transform(
+        costing_block.capital_recovery_factor_constraint,
+        1,
     )
     for ftype, scale in flow_cost_types.items():
         if "electricity" in ftype:
