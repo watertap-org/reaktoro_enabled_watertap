@@ -1018,4 +1018,4 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             model_state_dict["Fixed operating cost"] = (
                 self.ro_unit.costing.fixed_operating_cost
             )
-        return self.name, model_state_dict
+        return model_state_dict

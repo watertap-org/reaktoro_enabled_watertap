@@ -149,4 +149,4 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
                 "Capital cost": self.ERD.costing.capital_cost,
                 # "Operating cost": self.ERD.costing.operating_cost,
             }
-        return self.name, model_state_dict
+        return model_state_dict

@@ -407,4 +407,4 @@ class ChemicalAdditionUnitData(WaterTapFlowsheetBlockData):
                         f"{self.name}_reagent_{reagent}".replace(".", "_"),
                     ]
                 )
-        return self.name, model_state
+        return model_state
