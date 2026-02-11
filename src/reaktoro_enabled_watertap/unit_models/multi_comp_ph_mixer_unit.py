@@ -62,6 +62,17 @@ class MixerPhUnitData(WaterTapFlowsheetBlockData):
         ),
     )
     CONFIG.declare(
+        "isothermal_mixing",
+        ConfigValue(
+            default=True,
+            description="Set if the mixing process is isothermal",
+            doc="""
+               Will mix temperature based on inlet volumes and temperatures - this is only valid 
+               for when all inlets have same temperature or temperatures are very close. 
+            """,
+        ),
+    )
+    CONFIG.declare(
         "guess_secondary_inlet_composition",
         ConfigValue(
             default=False,
@@ -204,28 +215,31 @@ class MixerPhUnitData(WaterTapFlowsheetBlockData):
         self.mixer.find_component(f"mixed_state")[0].flow_mass_phase_comp[...]
         self.mixer.find_component(f"mixed_state")[0].conc_mass_phase_comp[...]
         # volumetric temp mixing - since we are assuming we are isothermal
-        # TODO: AAdd option to catch if we are isothermal or not
-        self.mixer.temp_constraint = Constraint(
-            expr=sum(
-                self.mixer.find_component(f"{port}_state")[0].temperature
-                * sum(
-                    self.mixer.find_component(f"{port}_state")[0].flow_mass_phase_comp[
+        # TODO: Add option to catch if we are isothermal or not
+        if self.config.isothermal_mixing:
+            self.mixer.temp_constraint = Constraint(
+                expr=sum(
+                    self.mixer.find_component(f"{port}_state")[0].temperature
+                    * sum(
+                        self.mixer.find_component(f"{port}_state")[
+                            0
+                        ].flow_mass_phase_comp[ion]
+                        for ion in self.mixer.find_component(f"{port}_state")[
+                            0
+                        ].flow_mass_phase_comp
+                    )
+                    for port in self.config.inlet_ports
+                )
+                / sum(
+                    self.mixer.find_component(f"mixed_state")[0].flow_mass_phase_comp[
                         ion
                     ]
-                    for ion in self.mixer.find_component(f"{port}_state")[
+                    for ion in self.mixer.find_component(f"mixed_state")[
                         0
                     ].flow_mass_phase_comp
                 )
-                for port in self.config.inlet_ports
+                == self.mixer.mixed_state[0].temperature
             )
-            / sum(
-                self.mixer.find_component(f"mixed_state")[0].flow_mass_phase_comp[ion]
-                for ion in self.mixer.find_component(f"mixed_state")[
-                    0
-                ].flow_mass_phase_comp
-            )
-            == self.mixer.mixed_state[0].temperature
-        )
         self.mixer_initialized = False
 
     def add_reaktoro_chemistry(self):
@@ -273,6 +287,14 @@ class MixerPhUnitData(WaterTapFlowsheetBlockData):
             "composition",
             feed_port.flow_mol_phase_comp,
         )
+        reaktoro_options["system_state_modifier"] = {
+            "pressure": self.mixer.mixed_state[0].pressure
+        }
+        if self.config.isothermal_mixing == False:
+            reaktoro_options["system_state_modifier"]["temperature"] = (
+                self.mixer.mixed_state[0].temperature
+            )
+
         if self.config.track_pE:
             reaktoro_options.system_state_option(
                 "pE", self.mixer.pE[self.config.inlet_ports[0]]
@@ -289,7 +311,8 @@ class MixerPhUnitData(WaterTapFlowsheetBlockData):
         self.mixer_speciation_block = ReaktoroBlock(**reaktoro_options)
 
     def scale_before_initialization(self, **kwargs):
-        iscale.constraint_scaling_transform(self.mixer.temp_constraint, 1e-2)
+        if self.config.isothermal_mixing:
+            iscale.constraint_scaling_transform(self.mixer.temp_constraint, 1e-2)
         for ph in self.mixer.pH:
             iscale.set_scaling_factor(self.mixer.pH[ph], 1)
         if self.config.track_pE:
