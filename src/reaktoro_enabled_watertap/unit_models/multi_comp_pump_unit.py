@@ -197,4 +197,4 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         }
         if self.config.default_costing_package is not None:
             model_state_dict["Costs"] = {"Capital cost": self.pump.costing.capital_cost}
-        return self.name, model_state_dict
+        return model_state_dict
