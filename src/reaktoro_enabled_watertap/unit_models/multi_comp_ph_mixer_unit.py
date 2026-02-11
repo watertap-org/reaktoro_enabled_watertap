@@ -387,4 +387,4 @@ class MixerPhUnitData(WaterTapFlowsheetBlockData):
             self.mixer.pH["outlet"],
             get_pe("outlet"),
         )
-        return self.name, model_state
+        return model_state

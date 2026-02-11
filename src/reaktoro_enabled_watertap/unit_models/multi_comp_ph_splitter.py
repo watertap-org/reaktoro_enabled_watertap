@@ -192,4 +192,4 @@ class SplitterPhUnitData(WaterTapFlowsheetBlockData):
                 get_pe(),
             )
 
-        return self.name, model_state
+        return model_state

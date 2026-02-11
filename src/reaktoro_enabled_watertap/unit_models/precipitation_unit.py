@@ -884,4 +884,4 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
                     ]
                 )
 
-        return self.name, model_state_dict
+        return model_state_dict

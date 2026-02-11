@@ -1,14 +1,16 @@
 #################################################################################
 # WaterTAP Copyright (c) 2020-2026, The Regents of the University of California,
 # through Lawrence Berkeley National Laboratory, Oak Ridge National Laboratory,
-# National Laboratory of the Rockies, and National Energy Technology
+# Laboratory of the Rockies, and National Energy Technology
 # Laboratory (subject to receipt of any required approvals from the U.S. Dept.
 # of Energy). All rights reserved.
 #
 # Please see the files COPYRIGHT.md and LICENSE.md for full copyright and license
 # information, respectively. These files are also available online at the URL
-# "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
+# "https://github.com/watertap-org/reaktoro_enabled_watertap"
 #################################################################################
+
+__author__ = "Alexander V. Dudchenko"
 
 from idaes.core.util.initialization import propagate_state
 from pyomo.network import Arc
@@ -17,8 +19,10 @@ from pyomo.environ import (
 )
 import idaes.core.util.scaling as iscale
 from pyomo.network import Port
+import idaes.logger as idaeslog
 
-__author__ = "Alexander V. Dudchenko"
+# Set up logger
+_log = idaeslog.getLogger(__name__)
 
 
 class PortContainer:
@@ -41,7 +45,10 @@ class PortContainer:
         """connect current port to provided port, registering
         the generated connection container using provided function"""
         connection = ConnectionContainer(self, inlet)
-        self.unit_block_reference.register_outlet_connection(connection)
+        if hasattr(self.unit_block_reference, "register_outlet_connection"):
+            self.unit_block_reference.register_outlet_connection(connection)
+        else:
+            self.connection = connection
 
     def fix(self):
         """this will fix the port and all variables in the var_dict"""
@@ -110,6 +117,7 @@ class ConnectionContainer:
         if self.registered_arc is None:
             raise ValueError(f"Arc was not created correctly for {arc_name}")
         self.unit_connection = f"{self.get_port_unit(outlet)}.{get_safe_name(outlet.name)}_to_{self.get_port_unit(inlet)}.{get_safe_name(inlet.name)}"
+        _log.info("Created arc connection: %s", arc_name)
 
     def build_constraints(self, outlet, inlet):
         """
@@ -149,7 +157,10 @@ class ConnectionContainer:
                                 inlet.var_dict[outlet_key],
                             )
                         )
-
+                        _log.info(
+                            "Created arc constraint: %s",
+                            f"eq_{outlet_key}_{outlet.name}_to_{inlet.name}",
+                        )
                         # scale the constraint
                         sf = iscale.get_scaling_factor(outlet.var_dict[outlet_key])
                         if sf != None:
@@ -160,6 +171,7 @@ class ConnectionContainer:
 
     def propagate(self):
         """this should prop any arcs and also ensure all equality constraints are satisfied"""
+        _log.info("Propagating connection: %s", self.unit_connection)
         propagate_state(self.registered_arc)
         self.propagate_equality_constraints()
 

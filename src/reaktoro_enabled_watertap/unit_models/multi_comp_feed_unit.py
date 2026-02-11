@@ -444,4 +444,4 @@ class MultiCompFeedData(WaterTapFlowsheetBlockData):
         model_state["Physical state"]["Volumetric flowrate"] = self.feed.properties[
             0
         ].flow_vol_phase["Liq"]
-        return self.name, model_state
+        return model_state

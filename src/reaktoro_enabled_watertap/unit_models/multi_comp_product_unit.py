@@ -91,4 +91,4 @@ class MultiCompProductData(WaterTapFlowsheetBlockData):
             0
         ].temperature
         model_state["Physical state"]["Pressure"] = self.product.properties[0].pressure
-        return self.name, model_state
+        return model_state
