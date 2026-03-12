@@ -211,8 +211,8 @@ def test_report(feed_flowsheet_fixture):
 
     Physical state:
     Key                 : Value      : Units  : Fixed : Bounds
-                Pressure : 1.0132e+05 :     Pa :  True : (1000.0, 50000000.0)
             Temperature :     298.15 :      K :  True : (273.15, 1000)
+                Pressure : 1.0132e+05 :     Pa :  True : (1000.0, 50000000.0)
     Volumetric flowrate :     1000.0 : m**3/s :  True : (0.0, None)
 
 ------------------------------------------------------------------------------------
