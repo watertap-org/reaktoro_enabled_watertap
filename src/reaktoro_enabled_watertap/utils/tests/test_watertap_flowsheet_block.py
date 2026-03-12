@@ -217,6 +217,9 @@ def test_report(feed_flowsheet_fixture):
 
 ------------------------------------------------------------------------------------
 """
+    print(result.replace(" ", ""))
     print(os.getvalue().replace(" ", ""))
     # testing with out spaces, as they are hard to control in the report output
-    assert os.getvalue().replace(" ", "") == result.replace(" ", "")
+    assert os.getvalue().replace(" ", "").encode("utf-8") == result.replace(
+        " ", ""
+    ).encode("utf-8")
