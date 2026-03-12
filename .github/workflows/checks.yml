@@ -65,7 +65,7 @@ jobs:
           - win64
         include:
           - os: linux
-            os-version: ubuntu-22.04 0 remove till we get ma27
+            os-version: ubuntu-22.04 #
           - os: mac
             os-version: macos-15
           - os: win64
@@ -83,21 +83,21 @@ jobs:
           - install-mode: standard
             pytest_folders: softening_acid_ro_stability   
           - os: linux
-            pytest_folders: flowsheets
+            pytest_folders: flowsheets # needs ma27
           - os: linux
-            pytest_folders: softening_acid_ro_treatment  
+            pytest_folders: softening_acid_ro_treatment  # needs ma27 
           - os: linux
-            pytest_folders: softening_acid_ro_validation  
+            pytest_folders: softening_acid_ro_validation   # needs ma27
           - os: linux
-            pytest_folders: softening_acid_ro_stability  
+            pytest_folders: softening_acid_ro_stability   # needs ma27
           # - os: mac
           #   pytest_folders: flowsheets
           - os: mac
-            pytest_folders: softening_acid_ro_treatment  
+            pytest_folders: softening_acid_ro_treatment   # might needs ma27, excluding to save time
           - os: mac
-            pytest_folders: softening_acid_ro_validation  
+            pytest_folders: softening_acid_ro_validation   # might needs ma27, excluding to save time
           - os: mac
-            pytest_folders: softening_acid_ro_stability  
+            pytest_folders: softening_acid_ro_stability   # might needs ma27, excluding to save time
     steps:                        
       - if: matrix.install-mode == 'dev'
         uses: actions/checkout@v4
