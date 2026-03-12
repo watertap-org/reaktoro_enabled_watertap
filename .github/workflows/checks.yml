@@ -90,8 +90,8 @@ jobs:
             pytest_folders: softening_acid_ro_validation   # needs ma27
           - os: linux
             pytest_folders: softening_acid_ro_stability   # needs ma27
-          # - os: mac
-          #   pytest_folders: flowsheets
+          - os: mac
+            pytest_folders: flowsheets
           - os: mac
             pytest_folders: softening_acid_ro_treatment   # might needs ma27, excluding to save time
           - os: mac
