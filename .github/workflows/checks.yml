@@ -63,8 +63,10 @@ jobs:
           #- linux
           - win64
         include:
-          #- os: linux
-          # os-version: ubuntu-22.04 0 remove till we get ma27
+          - os: linux
+            os-version: ubuntu-22.04 0 remove till we get ma27
+          - os: mac
+            os-version: macos-15
           - os: win64
             os-version: windows-2022
           - install-mode: dev
@@ -79,6 +81,22 @@ jobs:
             pytest_folders: softening_acid_ro_validation   
           - install-mode: standard
             pytest_folders: softening_acid_ro_stability   
+          - os: linux
+            pytest_folders: flowsheets
+          - os: linux
+            pytest_folders: softening_acid_ro_treatment  
+          - os: linux
+            pytest_folders: softening_acid_ro_validation  
+          - os: linux
+            pytest_folders: softening_acid_ro_stability  
+          - os: mac
+            pytest_folders: flowsheets
+          - os: mac
+            pytest_folders: softening_acid_ro_treatment  
+          - os: mac
+            pytest_folders: softening_acid_ro_validation  
+          - os: mac
+            pytest_folders: softening_acid_ro_stability  
     steps:                        
       - if: matrix.install-mode == 'dev'
         uses: actions/checkout@v4
