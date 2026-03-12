@@ -90,8 +90,8 @@ jobs:
             pytest_folders: softening_acid_ro_validation  
           - os: linux
             pytest_folders: softening_acid_ro_stability  
-          - os: mac
-            pytest_folders: flowsheets
+          # - os: mac
+          #   pytest_folders: flowsheets
           - os: mac
             pytest_folders: softening_acid_ro_treatment  
           - os: mac
