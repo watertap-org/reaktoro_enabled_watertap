@@ -211,12 +211,15 @@ def test_report(feed_flowsheet_fixture):
 
     Physical state:
     Key                 : Value      : Units  : Fixed : Bounds
-                Pressure : 1.0132e+05 :     Pa :  True : (1000.0, 50000000.0)
             Temperature :     298.15 :      K :  True : (273.15, 1000)
+                Pressure : 1.0132e+05 :     Pa :  True : (1000.0, 50000000.0)
     Volumetric flowrate :     1000.0 : m**3/s :  True : (0.0, None)
 
 ------------------------------------------------------------------------------------
 """
+    print(result.replace(" ", ""))
     print(os.getvalue().replace(" ", ""))
     # testing with out spaces, as they are hard to control in the report output
-    assert os.getvalue().replace(" ", "") == result.replace(" ", "")
+    assert os.getvalue().replace(" ", "").encode("utf-8") == result.replace(
+        " ", ""
+    ).encode("utf-8")

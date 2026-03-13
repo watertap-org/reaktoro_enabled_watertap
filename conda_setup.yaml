@@ -4,8 +4,8 @@ channels:
   - defaults
 dependencies:
   - python=3.12
-  - cyipopt
-  - reaktoro
+  - cyipopt>=1.6.1
+  - reaktoro>=2.13.0
   - pip
   - pip:
       - -r requirements-dev.txt
