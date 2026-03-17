@@ -204,37 +204,8 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             """,
         ),
     )
-    CONFIG.declare(
-        "osmotic_over_pressure",
-        ConfigValue(
-            default=2,
-            description="used in initialization to guess initial pressure for pump unit",
-            doc="""
-            Value to multiply osmotic pressure by if initialization_pressure is set to osmotic_pressure:
-            guess pressure = osmotic pressure * osmotic overpressure + osmotic pressure offset
-            """,
-        ),
-    )
-    CONFIG.declare(
-        "osmotic_pressure_offset",
-        ConfigValue(
-            default=2e5 * pyunits.Pa,
-            description="used in initialization to guess initial pressure for pump unit",
-            doc="""
-            Sets an fixed offset of guessed initial pressure
-            """,
-        ),
-    )
-    CONFIG.declare(
-        "maximum_pressure",
-        ConfigValue(
-            default=300e5 * pyunits.Pa,
-            description="Use only if pump unit is added",
-            doc="""
-            Sets the maximum pressure for the pump unit
-            """,
-        ),
-    )
+    CONFIG.declare("pump_options", MultiCompPumpUnit.CONFIG())
+    CONFIG.declare("ERD_options", MultiCompERDUnit.CONFIG())
     CONFIG.declare(
         "add_erd",
         ConfigValue(
@@ -332,22 +303,24 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             self.pump = MultiCompPumpUnit(
                 default_property_package=self.config.ro_property_package,
                 default_costing_package=self.config.default_costing_package,
-                default_costing_package_kwargs=self.config.default_costing_package_kwargs,
+                default_costing_package_kwargs=self.config.pump_options.default_costing_package_kwargs,
                 track_pH=False,
                 track_pE=False,
                 initialization_pressure="osmotic_pressure",
-                osmotic_over_pressure=self.config.osmotic_over_pressure,
-                osmotic_pressure_offset=self.config.osmotic_pressure_offset,
-                maximum_pressure=self.config.maximum_pressure,
+                osmotic_over_pressure=self.config.pump_options.osmotic_over_pressure,
+                osmotic_pressure_offset=self.config.pump_options.osmotic_pressure_offset,
+                maximum_pressure=self.config.pump_options.maximum_pressure,
+                pump_efficiency=self.config.pump_options.pump_efficiency,
             )
         self.register_port("feed", self.ro_feed.inlet, feed_vars)
         if self.config.add_erd:
             self.ERD = MultiCompERDUnit(
                 default_property_package=self.config.ro_property_package,
                 default_costing_package=self.config.default_costing_package,
-                default_costing_package_kwargs=self.config.default_costing_package_kwargs,
+                default_costing_package_kwargs=self.config.ERD_options.default_costing_package_kwargs,
                 track_pH=False,
                 track_pE=False,
+                erd_efficiency=self.config.ERD_options.erd_efficiency,
             )
 
         self.register_port("retentate", self.ro_retentate.outlet, retentate_vars)
