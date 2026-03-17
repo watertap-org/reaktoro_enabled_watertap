@@ -65,6 +65,16 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
             """,
         ),
     )
+    CONFIG.declare(
+        "track_pH",
+        ConfigValue(
+            default=True,
+            description="if pH should be tracked in the model",
+            doc="""
+                    Providing True will add pH variable to the model and track it
+            """,
+        ),
+    )
 
     def build(self):
         """Build a multi-component ERD unit model"""
@@ -79,8 +89,11 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
             )
         # Add ERD flow rate
         self.ERD.control_volume.properties_in[0].flow_vol_phase[...]
-        self.ERD.pH = Var(initialize=7, bounds=(0, 13), units=pyunits.dimensionless)
-        tracked_vars = {"pH": self.ERD.pH}
+        if self.config.track_pH:
+            self.ERD.pH = Var(initialize=7, bounds=(0, 13), units=pyunits.dimensionless)
+            tracked_vars = {"pH": self.ERD.pH}
+        else:
+            tracked_vars = {}
         if self.config.track_pE:
             self.ERD.pE = Var(
                 initialize=0,
@@ -88,7 +101,8 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
                 bounds=(None, None),
             )
             tracked_vars["pE"] = self.ERD.pE
-        iscale.set_scaling_factor(self.ERD.pH, 1)
+        if self.config.track_pH:
+            iscale.set_scaling_factor(self.ERD.pH, 1)
         self.register_port("inlet", self.ERD.inlet, tracked_vars)
         self.register_port("outlet", self.ERD.outlet, tracked_vars)
 
@@ -102,14 +116,24 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
         )
 
     def scale_before_initialization(self, **kwargs):
-        h2o_scale = self.config.default_property_package._default_scaling_factors[
-            "flow_mol_phase_comp", ("Liq", "H2O")
-        ] / value(self.config.default_property_package.mw_comp["H2O"])
+        if (
+            "flow_mol_phase_comp",
+            ("Liq", "H2O"),
+        ) in self.config.default_property_package._default_scaling_factors:
+
+            h2o_scale = self.config.default_property_package._default_scaling_factors[
+                "flow_mol_phase_comp", ("Liq", "H2O")
+            ] / value(self.config.default_property_package.mw_comp["H2O"])
+        else:
+            h2o_scale = self.config.default_property_package._default_scaling_factors[
+                "flow_mass_phase_comp", ("Liq", "H2O")
+            ]
         work_scale = 1e-5 / (1 / h2o_scale)
         iscale.set_scaling_factor(self.ERD.inlet.pressure, 1e-5)
         iscale.set_scaling_factor(self.ERD.outlet.pressure, 1e-5)
         iscale.set_scaling_factor(self.ERD.control_volume.work, work_scale)
-        iscale.set_scaling_factor(self.ERD.pH, 1)
+        if self.config.track_pH:
+            iscale.set_scaling_factor(self.ERD.pH, 1)
         if self.config.default_costing_package is not None:
             scu.calculate_scale_from_dependent_vars(
                 self.ERD.costing.capital_cost,
@@ -131,7 +155,6 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
         model_state_dict = {
             "Model": {"DOFs": unit_dofs},
             "Overall": {
-                "pH": self.ERD.pH,
                 "Temperature": self.ERD.inlet.temperature[0],
                 "Flow rate": self.ERD.control_volume.properties_in[0].flow_vol_phase[
                     "Liq"
@@ -144,6 +167,10 @@ class MultiCompERDUnitData(WaterTapFlowsheetBlockData):
                 "Pressure": self.ERD.outlet.pressure[0],
             },
         }
+        if self.config.track_pH:
+            model_state_dict["Overall"]["pH"] = self.ERD.pH
+        if self.config.track_pE:
+            model_state_dict["Overall"]["pE"] = self.ERD.pE
         if self.config.default_costing_package is not None:
             model_state_dict["Costs"] = {
                 "Capital cost": self.ERD.costing.capital_cost,

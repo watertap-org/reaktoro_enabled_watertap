@@ -13,6 +13,9 @@
 from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
+from reaktoro_enabled_watertap.unit_models.multi_comp_pump_unit import MultiCompPumpUnit
+
+from reaktoro_enabled_watertap.unit_models.multi_comp_erd_unit import MultiCompERDUnit
 from idaes.core.util.initialization import propagate_state
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ReaktoroOptionsContainer,
@@ -191,6 +194,57 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             """,
         ),
     )
+    CONFIG.declare(
+        "add_feed_pump",
+        ConfigValue(
+            default=False,
+            description="Whether to include a feed pump in the RO stage",
+            doc="""
+            If True, a feed pump will be included in the RO stage
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "osmotic_over_pressure",
+        ConfigValue(
+            default=2,
+            description="used in initialization to guess initial pressure for pump unit",
+            doc="""
+            Value to multiply osmotic pressure by if initialization_pressure is set to osmotic_pressure:
+            guess pressure = osmotic pressure * osmotic overpressure + osmotic pressure offset
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "osmotic_pressure_offset",
+        ConfigValue(
+            default=2e5 * pyunits.Pa,
+            description="used in initialization to guess initial pressure for pump unit",
+            doc="""
+            Sets an fixed offset of guessed initial pressure
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "maximum_pressure",
+        ConfigValue(
+            default=300e5 * pyunits.Pa,
+            description="Use only if pump unit is added",
+            doc="""
+            Sets the maximum pressure for the pump unit
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "add_erd",
+        ConfigValue(
+            default=False,
+            description="Whether to include an energy recovery device (ERD) in the RO stage",
+            doc="""
+            If True, an energy recovery device will be included in the RO stage
+            """,
+        ),
+    )
 
     def build(self):
         super().build()
@@ -274,7 +328,28 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             retentate_vars["pE"] = self.ro_retentate.pE
             product_vars["pE"] = self.ro_product.pE
 
+        if self.config.add_feed_pump:
+            self.pump = MultiCompPumpUnit(
+                default_property_package=self.config.ro_property_package,
+                default_costing_package=self.config.default_costing_package,
+                default_costing_package_kwargs=self.config.default_costing_package_kwargs,
+                track_pH=False,
+                track_pE=False,
+                initialization_pressure="osmotic_pressure",
+                osmotic_over_pressure=self.config.osmotic_over_pressure,
+                osmotic_pressure_offset=self.config.osmotic_pressure_offset,
+                maximum_pressure=self.config.maximum_pressure,
+            )
         self.register_port("feed", self.ro_feed.inlet, feed_vars)
+        if self.config.add_erd:
+            self.ERD = MultiCompERDUnit(
+                default_property_package=self.config.ro_property_package,
+                default_costing_package=self.config.default_costing_package,
+                default_costing_package_kwargs=self.config.default_costing_package_kwargs,
+                track_pH=False,
+                track_pE=False,
+            )
+
         self.register_port("retentate", self.ro_retentate.outlet, retentate_vars)
         self.register_port("product", self.ro_product.outlet, product_vars)
 
@@ -295,14 +370,28 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.add_permeate_ph_pe_constraint()
 
         # connecting translator blocks to ro unit
-        self.feed_to_ro = Arc(
-            source=self.ro_feed.outlet,
-            destination=self.ro_unit.inlet,
-        )
-        self.ro_to_retentate = Arc(
-            source=self.ro_unit.retentate,
-            destination=self.ro_retentate.inlet,
-        )
+        if self.config.add_feed_pump:
+            self.feed_to_pump = Arc(
+                source=self.ro_feed.outlet,
+                destination=self.pump.inlet.port,
+            )
+            self.pump.outlet.connect_to(self.ro_unit.inlet)
+        else:
+            self.feed_to_ro = Arc(
+                source=self.ro_feed.outlet,
+                destination=self.ro_unit.inlet,
+            )
+        if self.config.add_erd:
+            self.ro_to_erd = Arc(
+                source=self.ro_unit.retentate,
+                destination=self.ERD.inlet.port,
+            )
+            self.ERD.outlet.connect_to(self.ro_retentate.inlet)
+        else:
+            self.ro_to_retentate = Arc(
+                source=self.ro_unit.retentate,
+                destination=self.ro_retentate.inlet,
+            )
         self.ro_to_product = Arc(
             source=self.ro_unit.permeate,
             destination=self.ro_product.inlet,
@@ -616,6 +705,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
     def set_fixed_operation(self):
         """fixes operation point for pump unit model"""
+        if self.config.add_feed_pump:
+            self.pump.set_fixed_operation()
+
+        if self.config.add_erd:
+            self.ERD.set_fixed_operation()
         self.ro_unit = self.ro_unit
         # Default membrane performance metrics
         self.ro_unit.A_comp[0, "H2O"].fix(1.51 / (3600 * 1000 * 1e5))
@@ -663,6 +757,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
     def set_optimization_operation(self):
         """unfixes operation for optimization"""
+        if self.config.add_feed_pump:
+            self.pump.set_optimization_operation()
+
+        if self.config.add_erd:
+            self.ERD.set_optimization_operation()
         self.ro_unit.area.unfix()
         self.ro_unit.width.unfix()
         self.ro_unit.length.unfix()
@@ -701,6 +800,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
     def scale_before_initialization(self, **kwargs):
         """scales the unit before initialization"""
+
         iscale.set_scaling_factor(self.ro_feed.pH, 1)
         iscale.set_scaling_factor(self.ro_retentate.pH, 1)
         iscale.set_scaling_factor(self.ro_product.pH, 1)
@@ -720,17 +820,29 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         # Get the scaling factors for the RO property package and default property package
         prop_scaling = self.get_default_scaling_factors()
         # Configure default scaling factors for the RO property package
-        self.config.ro_property_package.set_default_scaling(
+        if (
             "flow_mass_phase_comp",
-            prop_scaling["H2O"],
-            index=("Liq", "H2O"),
-        )
-        self.config.ro_property_package.set_default_scaling(
+            ("Liq", "H2O"),
+        ) not in self.config.ro_property_package._default_scaling_factors:
+            self.config.ro_property_package.set_default_scaling(
+                "flow_mass_phase_comp",
+                prop_scaling["H2O"],
+                index=("Liq", "H2O"),
+            )
+        if (
             "flow_mass_phase_comp",
-            prop_scaling[self.ro_solute_type],
-            index=("Liq", self.ro_solute_type),
-        )
+            ("Liq", self.ro_solute_type),
+        ) not in self.config.ro_property_package._default_scaling_factors:
+            self.config.ro_property_package.set_default_scaling(
+                "flow_mass_phase_comp",
+                prop_scaling[self.ro_solute_type],
+                index=("Liq", self.ro_solute_type),
+            )
+        if self.config.add_feed_pump:
+            self.pump.scale_before_initialization()
 
+        if self.config.add_erd:
+            self.ERD.scale_before_initialization()
         # Scale the translator blocks
         for block in [self.ro_feed, self.ro_retentate, self.ro_product]:
             iscale.constraint_scaling_transform(block.eq_pressure_equality, 1e-5)
@@ -894,10 +1006,19 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
     def initialize_unit(self):
         self.init_translator_block(self.ro_feed)
-        propagate_state(self.feed_to_ro)
+
+        if self.config.add_feed_pump:
+            propagate_state(self.feed_to_pump)
+            self.pump.initialize()
+        else:
+            propagate_state(self.feed_to_ro)
         self.init_ro_unit(self.ro_unit)
         propagate_state(self.ro_to_product)
-        propagate_state(self.ro_to_retentate)
+        if self.config.add_erd:
+            propagate_state(self.ro_to_erd)
+            self.ERD.initialize()
+        else:
+            propagate_state(self.ro_to_retentate)
         self.ro_feed.properties_in[
             0
         ].flow_mol_phase_comp.fix()  # need to fix for initialization
@@ -913,6 +1034,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
                 self.ro_retentate.pH,
             ],
         )
+
         self.ro_feed.properties_in[0].flow_mol_phase_comp.unfix()
         if self.config.add_reaktoro_chemistry:
             self.scaling_block.initialize()
@@ -969,7 +1091,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             "Retentate": {
                 "pH": self.ro_retentate.pH,
                 "Pressure": pyunits.convert(
-                    self.ro_retentate.outlet.pressure[0], to_units=pyunits.bar
+                    self.ro_unit.retentate.pressure[0], to_units=pyunits.bar
                 ),
                 "Temperature": self.ro_retentate.outlet.temperature[0],
                 "Flow rate": self.ro_retentate.properties_in[0].flow_vol_phase["Liq"],
@@ -1018,4 +1140,8 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             model_state_dict["Fixed operating cost"] = (
                 self.ro_unit.costing.fixed_operating_cost
             )
+        if self.config.add_feed_pump:
+            self.pump.report()
+        if self.config.add_erd:
+            self.ERD.report()
         return model_state_dict

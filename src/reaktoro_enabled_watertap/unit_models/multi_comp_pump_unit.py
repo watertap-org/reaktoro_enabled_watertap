@@ -88,6 +88,17 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         ),
     )
     CONFIG.declare(
+        "track_pH",
+        ConfigValue(
+            default=True,
+            description="if pH should be tracked in the model",
+            doc="""
+                    Providing True will add pH variable to the model and track it
+            """,
+        ),
+    )
+
+    CONFIG.declare(
         "track_pE",
         ConfigValue(
             default=False,
@@ -109,8 +120,13 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
             )
         # Add pump flow rate
         self.pump.control_volume.properties_in[0].flow_vol_phase[...]
-        self.pump.pH = Var(initialize=7, bounds=(0, 13), units=pyunits.dimensionless)
-        tracked_vars = {"pH": self.pump.pH}
+        if self.config.track_pH:
+            self.pump.pH = Var(
+                initialize=7, bounds=(0, 13), units=pyunits.dimensionless
+            )
+            tracked_vars = {"pH": self.pump.pH}
+        else:
+            tracked_vars = {}
         if self.config.track_pE:
             self.pump.pE = Var(
                 initialize=0,
@@ -153,13 +169,23 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         self.pump.outlet.pressure[0].unfix()
 
     def scale_before_initialization(self, **kwargs):
-        h2o_scale = self.config.default_property_package._default_scaling_factors[
-            "flow_mol_phase_comp", ("Liq", "H2O")
-        ] / value(self.config.default_property_package.mw_comp["H2O"])
+        if (
+            "flow_mol_phase_comp",
+            ("Liq", "H2O"),
+        ) in self.config.default_property_package._default_scaling_factors:
+
+            h2o_scale = self.config.default_property_package._default_scaling_factors[
+                "flow_mol_phase_comp", ("Liq", "H2O")
+            ] / value(self.config.default_property_package.mw_comp["H2O"])
+        else:
+            h2o_scale = self.config.default_property_package._default_scaling_factors[
+                "flow_mass_phase_comp", ("Liq", "H2O")
+            ]
         work_scale = 1e-5 / (1 / h2o_scale)
         iscale.set_scaling_factor(self.pump.outlet.pressure, 1e-5)
         iscale.set_scaling_factor(self.pump.control_volume.work, work_scale)
-        iscale.set_scaling_factor(self.pump.pH, 1 / 10)
+        if self.config.track_pH:
+            iscale.set_scaling_factor(self.pump.pH, 1 / 10)
         if self.config.default_costing_package is not None:
             scu.calculate_scale_from_dependent_vars(
                 self.pump.costing.capital_cost,
@@ -182,7 +208,6 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
         model_state_dict = {
             "Model": {"DOFs": unit_dofs},
             "Overall": {
-                "pH": self.pump.pH,
                 "Temperature": self.pump.inlet.temperature[0],
                 "Flow rate": self.pump.control_volume.properties_in[0].flow_vol_phase[
                     "Liq"
@@ -195,6 +220,10 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
                 "Pressure": self.pump.outlet.pressure[0],
             },
         }
+        if self.config.track_pH:
+            model_state_dict["Overall"]["pH"] = self.pump.pH
+        if self.config.track_pE:
+            model_state_dict["Overall"]["pE"] = self.pump.pE
         if self.config.default_costing_package is not None:
             model_state_dict["Costs"] = {"Capital cost": self.pump.costing.capital_cost}
         return model_state_dict

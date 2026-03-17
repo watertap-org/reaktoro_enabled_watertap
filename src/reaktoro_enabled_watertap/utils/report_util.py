@@ -128,7 +128,6 @@ def build_report_table(
     ostream.write("\n" + "-" * max_str_length + "\n")
     ostream.write(f"{prefix}{tab}{unit_name} state")
     ostream.write("\n" * 2)
-    print(data_dict)
     for key, sub_data in data_dict.items():
 
         ostream.write(f"{prefix}{tab}{key}: \n")
