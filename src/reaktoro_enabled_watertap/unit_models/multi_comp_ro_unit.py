@@ -13,9 +13,15 @@
 from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
-from reaktoro_enabled_watertap.unit_models.multi_comp_pump_unit import MultiCompPumpUnit
+from reaktoro_enabled_watertap.unit_models.multi_comp_pump_unit import (
+    MultiCompPumpUnit,
+    MultiCompPumpUnitData,
+)
 
-from reaktoro_enabled_watertap.unit_models.multi_comp_erd_unit import MultiCompERDUnit
+from reaktoro_enabled_watertap.unit_models.multi_comp_erd_unit import (
+    MultiCompERDUnit,
+    MultiCompERDUnitData,
+)
 from idaes.core.util.initialization import propagate_state
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ReaktoroOptionsContainer,
@@ -204,8 +210,8 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             """,
         ),
     )
-    CONFIG.declare("pump_options", MultiCompPumpUnit.CONFIG())
-    CONFIG.declare("ERD_options", MultiCompERDUnit.CONFIG())
+    CONFIG.declare("pump_options", MultiCompPumpUnitData.CONFIG())
+    CONFIG.declare("ERD_options", MultiCompERDUnitData.CONFIG())
     CONFIG.declare(
         "add_erd",
         ConfigValue(
