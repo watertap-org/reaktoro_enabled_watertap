@@ -127,6 +127,83 @@ def test_osmotic_init_pressure():
 
 @pytest.mark.core
 @pytest.mark.component
+def test_with_integrated_pump_and_erd():
+    m = build_case("USDA_brackish", True)
+    m.fs.sea_water_prop_pack = sea_water_props.SeawaterParameterBlock()
+    m.fs.ro_unit = MultiCompROUnit(
+        default_property_package=m.fs.properties,
+        ro_property_package=m.fs.sea_water_prop_pack,
+        add_feed_pump=True,
+        add_erd=True,
+    )
+
+    m.fs.feed.outlet.connect_to(m.fs.ro_unit.feed)
+
+    TransformationFactory("network.expand_arcs").apply_to(m)
+
+    m.fs.ro_unit.fix_and_scale()
+
+    iscale.calculate_scaling_factors(m)
+
+    m.fs.feed.initialize()
+    m.fs.ro_unit.initialize()
+    m.fs.ro_unit.report()
+    assert degrees_of_freedom(m) == 0
+
+    solver = get_cyipopt_watertap_solver()
+    result = solver.solve(m, tee=True)
+    assert_optimal_termination(result)
+    m.fs.ro_unit.report()
+    assert degrees_of_freedom(m) == 0
+    assert (
+        pytest.approx(
+            value(
+                pyunits.convert(
+                    m.fs.ro_unit.ro_unit.flux_mass_phase_comp_avg[0, "Liq", "H2O"],
+                    to_units=pyunits.kg / (pyunits.m**2 * pyunits.hr),
+                )
+            ),
+            1e-2,
+        )
+        == 1.9411364759850283
+    )
+
+    assert (
+        pytest.approx(
+            value(
+                pyunits.convert(
+                    m.fs.ro_unit.ro_unit.inlet.pressure[0], to_units=pyunits.bar
+                )
+            ),
+            1e-2,
+        )
+        == 6.7899
+    )
+    assert (
+        pytest.approx(
+            value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
+            1e-2,
+        )
+        == 1.6699
+    )
+    assert (
+        pytest.approx(
+            value(m.fs.ro_unit.ro_unit.scaling_tendency["Gypsum"]),
+            1e-2,
+        )
+        == 0.4075
+    )
+    assert (
+        pytest.approx(
+            value(m.fs.ro_unit.ro_product.pH),
+            1e-2,
+        )
+        == 7.0599
+    )
+
+
+@pytest.mark.core
+@pytest.mark.component
 def test_user_options():
     m = build_case("USDA_brackish", True)
     m.fs.sea_water_prop_pack = sea_water_props.SeawaterParameterBlock()
