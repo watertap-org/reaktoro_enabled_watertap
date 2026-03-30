@@ -143,6 +143,8 @@ def test_with_integrated_pump_and_erd():
 
     m.fs.ro_unit.fix_and_scale()
 
+    assert degrees_of_freedom(m) == 0
+
     iscale.calculate_scaling_factors(m)
 
     m.fs.feed.initialize()
