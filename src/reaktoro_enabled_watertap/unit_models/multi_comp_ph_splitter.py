@@ -180,6 +180,7 @@ class SplitterPhUnitData(WaterTapFlowsheetBlockData):
             else:
                 return None
 
+        model_state["Split ratios"] = self.splitter.split_fraction
         model_state["Inlet"] = get_ion_comp(
             self.splitter.find_component("mixed_state")[0],
             self.splitter.pH,

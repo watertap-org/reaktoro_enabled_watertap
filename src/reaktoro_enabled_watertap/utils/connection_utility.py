@@ -104,7 +104,12 @@ class ConnectionContainer:
         arc = Arc(source=self.get_port(outlet), destination=self.get_port(inlet))
 
         def get_safe_name(name):
-            return name.replace(".", "_").replace("-", "_")
+            return (
+                name.replace(".", "_")
+                .replace("-", "_")
+                .replace("[", "_")
+                .replace("]", "_")
+            )
 
         arc_name = f"{get_safe_name(outlet.name)}_to_{get_safe_name(inlet.name)}"
         outlet.unit_block_reference.add_component(
