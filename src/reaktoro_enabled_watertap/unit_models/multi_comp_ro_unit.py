@@ -589,7 +589,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_unit.eq_max_removal_at_interface = Constraint(
             expr=self.ro_unit.water_removed_at_interface
             <= self.ro_unit.inlet.flow_mass_phase_comp[0, "Liq", "H2O"]
-            * self.config.default_property_package.mw_comp["H2O"]
+            / self.config.default_property_package.mw_comp["H2O"]
             * 0.99
         )
         self.ro_unit.eq_max_removal_at_interface.deactivate()
