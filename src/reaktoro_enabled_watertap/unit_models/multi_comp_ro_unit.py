@@ -586,6 +586,13 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             * ro_cp_interface.flow_mass_phase_comp["Liq", "H2O"]
             / ro_cp_interface.flow_mass_phase_comp["Liq", self.ro_solute_type]
         )
+        self.ro_unit.eq_max_removal_at_interface = Constraint(
+            expr=self.ro_unit.water_removed_at_interface
+            <= self.ro_unit.inlet.flow_mass_phase_comp[0, "Liq", "H2O"]
+            * self.config.default_property_package.mw_comp["H2O"]
+            * 0.99
+        )
+        self.ro_unit.eq_max_removal_at_interface.deactivate()
         if self.config.use_bulkcomp_for_effluent_pH:
             self.ro_unit.water_removed_in_feed = Var(
                 initialize=1, bounds=(1e-8, None), units=pyunits.mol / pyunits.s
@@ -849,6 +856,9 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             iscale.set_scaling_factor(
                 self.ro_unit.water_removed_at_interface, prop_scaling["H2O_mol"]
             )
+            iscale.constraint_scaling_transform(
+                self.ro_unit.eq_max_removal_at_interface, prop_scaling["H2O_mol"]
+            )
         if self.ro_unit.find_component("eq_water_removed_in_feed") is not None:
             iscale.constraint_scaling_transform(
                 self.ro_unit.eq_water_removed_in_feed,
@@ -1016,6 +1026,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
 
         self.ro_feed.properties_in[0].flow_mol_phase_comp.unfix()
         if self.config.add_reaktoro_chemistry:
+            self.ro_unit.eq_max_removal_at_interface.activate()
             self.scaling_block.initialize()
             self.scaling_block.display_jacobian_scaling()
             if self.config.use_bulkcomp_for_effluent_pH:
