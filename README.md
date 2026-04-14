@@ -42,7 +42,7 @@ Refer to flowsheet configuration details and tests for example usage.
 
 
 ## 5 Add ma27 support for Cyipopt
-We strongly recommend adding ma27 linear solver to cyipopt. To do so please follow instruction on [cyipopt website](https://cyipopt.readthedocs.io/en/stable/install.html#conda-forge-binaries-with-hsl)
+We strongly recommend adding ma27 linear solver to cyipopt. To do so please follow instruction on [cyipopt website](https://cyipopt.readthedocs.io/stable/install.html#conda-forge-binaries-with-hsl)
 
 ## 6 Installation
 
