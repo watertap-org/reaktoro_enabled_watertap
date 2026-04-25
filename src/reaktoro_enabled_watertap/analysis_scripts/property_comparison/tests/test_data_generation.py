@@ -61,7 +61,6 @@ def test_prop_sweep():
         file_key="fs.nacl_feed.properties[0.0].dens_mass_phase[Liq]",
         return_key=("Watertap NaCl property package", "density"),
     )
-    data_manager.register_data_key(file_key="fs.costing.LCOW", return_key="LCOW")
     data_manager.load_data()
     data_manager.display()
     test_data = {
