@@ -10,7 +10,7 @@
 # "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
 #################################################################################
 
-from psPlotKit.data_manager.ps_data_manager import psDataManager
+from psPlotKit.data_manager.ps_data_manager import PsDataManager
 from psPlotKit.data_plotter.fig_generator import figureGenerator
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
@@ -94,7 +94,7 @@ def main(show_figs=True):
         work_path
         / "analysis_scripts/softening_acid_ro/figure_generation/treatment_figures/"
     )
-    data_manager = psDataManager(
+    data_manager = PsDataManager(
         str(
             work_path
             / "analysis_scripts/softening_acid_ro/data_generation/output/treatment_lime_soda_ash_hcl_h2so4_sweep_analysisType_treatment_sweep.h5"
