@@ -10,8 +10,8 @@
 # "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
 #################################################################################
 
-from psPlotKit.data_manager.ps_data_manager import psDataManager
-from psPlotKit.data_plotter.fig_generator import figureGenerator
+from psPlotKit.data_manager.ps_data_manager import PsDataManager
+from psPlotKit.data_plotter.fig_generator import FigureGenerator
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 import pandas as pd
 
@@ -105,7 +105,7 @@ def main(show_figs=False):
     save_location = (
         work_path / "analysis_scripts/property_comparison/figure_generation/"
     )
-    data_manager = psDataManager(
+    data_manager = PsDataManager(
         str(
             work_path
             / "analysis_scripts/property_comparison/data_generation/output/prop_sweep_analysisType_prop_sweep.h5"
@@ -163,7 +163,7 @@ def main(show_figs=False):
         "Watertap NaCl property package": "#fb9a99",
     }
     for water in water_reference.keys():
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure()
         for case, color in packages.items():
             fig.plot_line(
@@ -190,7 +190,7 @@ def main(show_figs=False):
             f"{save_location}/figures/{water_reference[water]}_osmotic_pressure_comparison"
         )
     for water in water_reference.keys():
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure()
         for case, color in packages.items():
             fig.plot_line(

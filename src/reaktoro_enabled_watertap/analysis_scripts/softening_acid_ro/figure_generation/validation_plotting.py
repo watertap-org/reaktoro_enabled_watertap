@@ -10,8 +10,8 @@
 # "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
 #################################################################################
 
-from psPlotKit.data_manager.ps_data_manager import psDataManager
-from psPlotKit.data_plotter.fig_generator import figureGenerator
+from psPlotKit.data_manager.ps_data_manager import PsDataManager
+from psPlotKit.data_plotter.fig_generator import FigureGenerator
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 import pandas as pd
 
@@ -106,7 +106,7 @@ def main(show_figs=True):
         work_path
         / "analysis_scripts/softening_acid_ro/figure_generation/validation_figures/"
     )
-    data_manager = psDataManager(
+    data_manager = PsDataManager(
         str(
             work_path
             / "analysis_scripts/softening_acid_ro/data_generation/output/validation_soda_ash_hcl_h2so4_sweep_analysisType_validation_sweep.h5"
@@ -193,7 +193,7 @@ def main(show_figs=True):
     acids = {"HCl": "o", "H2SO4": "s"}
     study = {"This work": "red", "Amusat et al. (2024)": "black"}
     for case, case_details in plot_cases.items():
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure(width=3, height=2)
         for acid, marker in acids.items():
             dm = case_details["dm"]
@@ -230,7 +230,7 @@ def main(show_figs=True):
             ylabel="LCOW ($\$$/$m^3$)",
             yticks=yticks,
         )
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure(width=3, height=2)
         for acid, marker in acids.items():
             dm = case_details["dm"]
@@ -272,7 +272,7 @@ def main(show_figs=True):
             ylabel="Soda ash dose (mg/L)",
             yticks=yticks,
         )
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure(width=3, height=2)
         for acid, marker in acids.items():
             dm = case_details["dm"]
@@ -321,7 +321,7 @@ def main(show_figs=True):
             ylabel="Acid dose (mg/L)",
             yticks=yticks,
         )
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure(width=3, height=2)
         for acid, marker in acids.items():
             dm = case_details["dm"]
@@ -378,7 +378,7 @@ def main(show_figs=True):
             ylabel="Scaling Tendency (Calcite)",
             yticks=yticks,
         )
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure(width=3, height=2)
         for acid, marker in acids.items():
             dm = case_details["dm"]

@@ -10,9 +10,17 @@
 # "https://https://github.com/watertap-org/reaktoro_enabled_watertap"
 #################################################################################
 
-from psPlotKit.data_manager.ps_data_manager import psDataManager
-from psPlotKit.data_plotter.ps_break_down_plotter import breakDownPlotter
+from psPlotKit.data_manager.ps_data_manager import PsDataManager
+from psPlotKit.data_plotter.ps_break_down_plotter import BreakDownPlotter
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
+from psPlotKit.data_manager.costing_packages.watertap_costing import (
+    WaterTapCostingPackage,
+)
+from psPlotKit.data_manager.ps_costing import (
+    PsCostingPackage,
+    PsCostingGroup,
+    PsCostingManager,
+)
 
 __author__ = "Alexander V. Dudchenko"
 
@@ -22,67 +30,136 @@ def main(show_figs=True):
     save_location = (
         work_path / "analysis_scripts/softening_acid_ro/figure_generation/cost_figures/"
     )
-    costing_data = psDataManager(
+    costing_data = PsDataManager(
         str(
             work_path
             / "analysis_scripts/softening_acid_ro/data_generation/output/treatment_lime_soda_ash_hcl_h2so4_sweep_analysisType_treatment_sweep.h5"
         ),
     )
-    device_groups = {
-        "ERD": {
-            "units": {
-                "ERD": "erd_unit",
-            },
+    RO = PsCostingGroup("RO")
+    RO.add_unit(
+        unit_name="ro_unit.ro_unit",
+        capex_keys="capital_cost",
+        fixed_opex_keys="fixed_operating_cost",
+    )
+    RO.add_unit(
+        unit_name="pump_unit.pump",
+        capex_keys="capital_cost",
+        flow_keys={"electricity": "control_volume.work"},
+    )
+    HPRO = PsCostingGroup("HPRO")
+    HPRO.add_unit(
+        unit_name="hpro_unit.ro_unit",
+        capex_keys="capital_cost",
+        fixed_opex_keys="fixed_operating_cost",
+    )
+    HPRO.add_unit(
+        unit_name="hp_pump_unit.pump",
+        capex_keys="capital_cost",
+        flow_keys={"electricity": "control_volume.work"},
+    )
+    erd = PsCostingGroup("ERD")
+    erd.add_unit(
+        unit_name="erd_unit.ERD",
+        capex_keys="capital_cost",
+        flow_keys={"electricity": "control_volume.work"},
+    )
+    softening = PsCostingGroup("Softening")
+    softening.add_unit(
+        unit_name="precipitation_reactor",
+        capex_keys="capital_cost",
+        flow_keys={
+            "Lime_cost": "flow_mass_reagent[CaO]",
+            "Sodaash_cost": "flow_mass_reagent[Na2CO3]",
         },
-        "RO": {
-            "units": {
-                "ro_unit": "ro_unit",
-                "pump": "pump_unit",
-            },
+    )
+    acid_addition = PsCostingGroup("Acid addition")
+    acid_addition.add_unit(
+        unit_name="chemical_reactor",
+        capex_keys="capital_cost",
+        flow_keys={
+            "Sulfuric_acid_cost": "flow_mass_reagent[H2SO4]",
+            "Hydrochloric_acid_cost": "flow_mass_reagent[HCl]",
         },
-        "HPRO": {
-            "units": {
-                "ro_unit": "hpro_unit",
-                "pump": "hp_pump_unit",
-            },
-        },
-        "Softening": {
-            "CAPEX": {
-                "units": "precipitation_reactor",
-            },
-            "OPEX": {
-                "units": {
-                    "fs.costing.aggregate_flow_costs[fs_softening_unit_reagent_CaO]",
-                    "fs.costing.aggregate_flow_costs[fs_softening_unit_reagent_Na2CO3]",
-                }
-            },
-        },
-        "Acid addition": {
-            "CAPEX": {
-                "units": "chemical_reactor",
-            },
-            "OPEX": {
-                "units": {
-                    "fs.costing.aggregate_flow_costs[fs_acidification_unit_reagent_H2SO4]",
-                    "fs.costing.aggregate_flow_costs[fs_acidification_unit_reagent_HCl]",
-                }
-            },
-        },
-    }
+    )
+    # device_groups = {
+    #     "ERD": {
+    #         "units": {
+    #             "ERD": "erd_unit",
+    #         },
+    #     },
+    #     "RO": {
+    #         "units": {
+    #             "ro_unit": "ro_unit",
+    #             "pump": "pump_unit",
+    #         },
+    #     },
+    #     "HPRO": {
+    #         "units": {
+    #             "ro_unit": "hpro_unit",
+    #             "pump": "hp_pump_unit",
+    #         },
+    #     },
+    #     "Softening": {
+    #         "CAPEX": {
+    #             "units": "precipitation_reactor",
+    #         },
+    #         "OPEX": {
+    #             "units": {
+    #                 "fs.costing.aggregate_flow_costs[fs_softening_unit_reagent_CaO]",
+    #                 "fs.costing.aggregate_flow_costs[fs_softening_unit_reagent_Na2CO3]",
+    #             }
+    #         },
+    #     },
+    #     "Acid addition": {
+    #         "CAPEX": {
+    #             "units": "chemical_reactor",
+    #         },
+    #         "OPEX": {
+    #             "units": {
+    #                 "fs.costing.aggregate_flow_costs[fs_acidification_unit_reagent_H2SO4]",
+    #                 "fs.costing.aggregate_flow_costs[fs_acidification_unit_reagent_HCl]",
+    #             }
+    #         },
+    #     },
+    # }
 
-    costing_data.load_data(
-        [
-            {
-                "filekey": "fs.water_recovery",
-                "return_key": "Water recovery",
-                "units": "%",
-            },
-        ],
+    costing_data.register_data_key(
+        file_key="fs.water_recovery",
+        return_key="Water recovery",
+        units="%",
     )
-    costing_data.get_costing(
-        device_groups,
-        default_flow="fs.product.product.properties[0.0].flow_vol_phase[Liq]",
+
+    pkg = WaterTapCostingPackage(
+        costing_block="fs.costing", validation_key="fs.costing.LCOW"
     )
+    pkg.add_flow_cost(
+        "Lime_cost",
+        cost_parameter_key="fs_softening_unit_reagent_CaO_cost",
+        parameter_assign_units="USD/kg",
+    )
+    pkg.add_flow_cost(
+        "Sodaash_cost",
+        cost_parameter_key="fs_softening_unit_reagent_Na2CO3_cost",
+        parameter_assign_units="USD/kg",
+    )
+    pkg.add_flow_cost(
+        "Sulfuric_acid_cost",
+        cost_parameter_key="fs_acidification_unit_reagent_H2SO4_cost",
+        parameter_assign_units="USD/kg",
+    )
+    pkg.add_flow_cost(
+        "Hydrochloric_acid_cost",
+        cost_parameter_key="fs_acidification_unit_reagent_HCl_cost",
+        parameter_assign_units="USD/kg",
+    )
+    pkg.register_product_flow(
+        file_key="fs.product.product.properties[0.0].flow_vol_phase[Liq]"
+    )
+    cm = PsCostingManager(
+        costing_data, pkg, [RO, HPRO, erd, softening, acid_addition]
+    )  # , acid_addition])
+    cm.build(error_on_validation_failure=True)
 
     regions = {
         "seawater": {
@@ -114,7 +191,7 @@ def main(show_figs=True):
     ]:
         costing_data.select_data(case, exact_keys=True)
         wr = costing_data.get_selected_data()
-        cost_plotter = breakDownPlotter(
+        cost_plotter = BreakDownPlotter(
             wr,
             save_folder=save_location,
             save_name="{}".format(case[1]),
@@ -129,12 +206,12 @@ def main(show_figs=True):
                 {"Softening": {"label": None, "color": "#33a02c"}},
             ]
         )
-        cost_plotter.define_hatch_groups(
-            {"TOTAL": {}}
-        )  # {"CAPEX": {}, "OPEX": {"hatch": "//"}})
+        # cost_plotter.define_hatch_groups(
+        #     {"LCOW": {}}
+        # )  # {"CAPEX": {}, "OPEX": {"hatch": "//"}})
         cost_plotter.plotbreakdown(
             xdata="Water recovery",
-            ydata=["cost_breakdown", "levelized"],
+            ydata="LCOW",
             axis_options={
                 "yticks": [0, 0.5, 1, 1.5],
                 "xticks": [50, 60, 70, 80, 90],
