@@ -11,7 +11,7 @@
 #################################################################################
 
 from psPlotKit.data_manager.ps_data_manager import PsDataManager
-from psPlotKit.data_plotter.fig_generator import figureGenerator
+from psPlotKit.data_plotter.fig_generator import FigureGenerator
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
 __author__ = "Alexander V. Dudchenko"
@@ -36,7 +36,7 @@ def plot_fig(
     color="black",
 ):
     if fig is None:
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure(width=width, height=height)
     if hasattr(ydata, "data"):
         ydata = ydata.data

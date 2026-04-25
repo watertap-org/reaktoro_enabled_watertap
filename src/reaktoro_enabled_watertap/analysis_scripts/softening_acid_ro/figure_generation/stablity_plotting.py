@@ -11,7 +11,7 @@
 #################################################################################
 
 from psPlotKit.data_manager.ps_data_manager import PsDataManager
-from psPlotKit.data_plotter.fig_generator import figureGenerator
+from psPlotKit.data_plotter.fig_generator import FigureGenerator
 
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
@@ -215,7 +215,7 @@ def main(show_figs=True):
                 )
 
     for fig_type, fig_settings in figures.items():
-        fig = figureGenerator()
+        fig = FigureGenerator()
         fig.init_figure()
         created_label = []
         for i, hess in enumerate(keys):
