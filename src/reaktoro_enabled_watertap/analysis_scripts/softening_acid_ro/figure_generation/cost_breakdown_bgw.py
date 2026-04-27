@@ -82,47 +82,6 @@ def main(show_figs=True):
             "Hydrochloric_acid_cost": "flow_mass_reagent[HCl]",
         },
     )
-    # device_groups = {
-    #     "ERD": {
-    #         "units": {
-    #             "ERD": "erd_unit",
-    #         },
-    #     },
-    #     "RO": {
-    #         "units": {
-    #             "ro_unit": "ro_unit",
-    #             "pump": "pump_unit",
-    #         },
-    #     },
-    #     "HPRO": {
-    #         "units": {
-    #             "ro_unit": "hpro_unit",
-    #             "pump": "hp_pump_unit",
-    #         },
-    #     },
-    #     "Softening": {
-    #         "CAPEX": {
-    #             "units": "precipitation_reactor",
-    #         },
-    #         "OPEX": {
-    #             "units": {
-    #                 "fs.costing.aggregate_flow_costs[fs_softening_unit_reagent_CaO]",
-    #                 "fs.costing.aggregate_flow_costs[fs_softening_unit_reagent_Na2CO3]",
-    #             }
-    #         },
-    #     },
-    #     "Acid addition": {
-    #         "CAPEX": {
-    #             "units": "chemical_reactor",
-    #         },
-    #         "OPEX": {
-    #             "units": {
-    #                 "fs.costing.aggregate_flow_costs[fs_acidification_unit_reagent_H2SO4]",
-    #                 "fs.costing.aggregate_flow_costs[fs_acidification_unit_reagent_HCl]",
-    #             }
-    #         },
-    #     },
-    # }
 
     costing_data.register_data_key(
         file_key="fs.water_recovery",
@@ -215,6 +174,7 @@ def main(show_figs=True):
             axis_options={
                 "yticks": [0, 0.5, 1, 1.5],
                 "xticks": [50, 60, 70, 80, 90],
+                "ylabel": "LCOW ($\$/m^3$)",
             },
             legend_loc="upper left",
             generate_figure=False,

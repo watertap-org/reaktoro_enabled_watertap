@@ -160,6 +160,7 @@ def main(show_figs=True):
         axis_options={
             "yticks": [0, 0.5, 1, 1.5, 2.0],
             "xticks": [50, 60, 70, 80, 90],
+            "ylabel": "LCOW ($\$/m^3$)",
         },
         legend_loc="upper left",
         fig_options={"width": 1.8, "height": 1.6},
