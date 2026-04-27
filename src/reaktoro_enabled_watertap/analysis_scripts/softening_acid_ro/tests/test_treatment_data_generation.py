@@ -7,7 +7,7 @@ from reaktoro_enabled_watertap.analysis_scripts.softening_acid_ro.data_generatio
 )
 from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 
-from psPlotKit.data_manager.ps_data_manager import psDataManager
+from psPlotKit.data_manager.ps_data_manager import PsDataManager
 
 import os
 
@@ -25,7 +25,7 @@ def test_treatment_sweep():
 
     treatment_sweep.main()
 
-    data_manager = psDataManager(
+    data_manager = PsDataManager(
         filename,
     )
     data_manager.register_data_key(
