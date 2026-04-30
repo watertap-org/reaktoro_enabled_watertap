@@ -45,8 +45,6 @@ from watertap.unit_models.mvc.components.lmtd_chen_callback import (
     delta_temperature_chen_callback,
 )
 from watertap.unit_models.pressure_changer import Pump
-import watertap.property_models.seawater_prop_pack as props_sw
-import watertap.property_models.water_prop_pack as props_w
 from idaes.core import (
     declare_process_block_class,
 )
@@ -54,9 +52,6 @@ from idaes.core import UnitModelCostingBlock
 
 import idaes.core.util.scaling as iscale
 from idaes.core.util.initialization import fix_state_vars, revert_state_vars
-from idaes.models.unit_models import (
-    Translator,
-)
 from reaktoro_enabled_watertap.utils import scale_utils as scu
 
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
@@ -114,8 +109,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
             default=True,
             description="To use Reaktoro-PSE for estimating scaling potential",
             doc="""
-            If True, builds a reaktoro block and uses it to calculate scaling potential at membrane water interface in
-            final RO node, if use_interfacecomp_for_effluent_pH or use_bulkcomp_for_effluent_pH is True, it will be used to compute pH as well
+            If True, builds a reaktoro block and uses it to calculate scaling potential and pH, which are then used in constraints to limit scaling and track pH. If False, does not build reaktoro block and does not calculate scaling, but still tracks pH and limits it to be the same in feed and brine.
             """,
         ),
     )
@@ -175,9 +169,9 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
         "target_temperature",
         ConfigValue(
             default=50,
-            description="Target temperature for RO stage during initialization",
+            description="Target temperature for MVC during initialization",
             doc="""
-            Sets a target inlet velocity for RO stage during initialization
+            Sets a target temperature for MVC during initialization, this is the temperature at which evaporator outlet brine will be fixed during initialization
             """,
         ),
     )
@@ -187,7 +181,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
             default=9,
             description="Material factor for evaporator used in costing",
             doc="""
-            Material factor for evaporator used in costing, this is a multiplier on the evaporator cost to account for more expensive materials needed for high scaling potential streams
+            Material factor for evaporator used in costing, this is a multiplier on the evaporator cost to account for more expensive materials needed for high scaling potential and corrosive streams.
             """,
         ),
     )
@@ -569,7 +563,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
         iscale.set_scaling_factor(self.evap_constraint, 1e-2)
 
     def add_recovery_constraint(self):
-        """adds recovery constraint for RO stage"""
+        """adds recovery constraint for MVC"""
         self.recovery = Var(
             initialize=self.config.target_recovery,
             bounds=(1e-8, 1),
@@ -592,7 +586,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
         )
 
     def add_retentate_ph_pe_constraint(self):
-        """adds retentate pH constraint"""
+        """adds evaporator's brine pH constraint"""
         self.eq_ph_equality = Constraint(expr=self.pH["feed"] == self.pH["brine"])
         if self.config.track_pE:
             self.eq_pE_equality = Constraint(expr=self.pE["feed"] == self.pE["brine"])
@@ -652,7 +646,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
         )
 
     def add_reaktoro_chemistry(self):
-        """add water removal constraint, and relevant reaktoro block"""
+        """add relevant reaktoro block"""
 
         outputs = {("pH", None): self.pH["brine"]}
         if self.config.track_pE:
@@ -849,7 +843,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
     def scale_before_initialization(self, **kwargs):
         """scales the unit before initialization"""
 
-        # Get the scaling factors for the RO property package and default property package
+        # Get the scaling factors for the MVC property package and default property package
         prop_scaling = self.get_default_scaling_factors()
 
         iscale.constraint_scaling_transform(self.mixer_feed.mixer_pressure_eq, 1e-5)
