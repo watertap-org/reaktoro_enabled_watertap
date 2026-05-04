@@ -84,7 +84,7 @@ __author__ = "Alexander V. Dudchenko"
 def main():
     m = build_model(water_case="USDA_brackish.yaml", softening_reagents=["NaOH"])
     initialize_model(m)
-    for ph in np.arange(9.0, 13.5, 0.5):
+    for ph in np.arange(9.0, 13, 0.5):
         m.fs.softening_unit.precipitation_reactor.pH["outlet"].fix(ph)
         solve_model(m, limited_memory=False)
         m.fs.softening_unit.report()
