@@ -23,7 +23,7 @@ def test_treatment_sweep():
     if os.path.exists(filename):
         os.remove(filename)
 
-    treatment_sweep.main()
+    treatment_sweep.main(num_loop_workers=4)
 
     data_manager = PsDataManager(
         filename,

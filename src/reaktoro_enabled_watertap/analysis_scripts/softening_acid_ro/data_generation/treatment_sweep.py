@@ -18,7 +18,7 @@ from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 __author__ = "Alexander V. Dudchenko"
 
 
-def main(save_location=None, config_location=None):
+def main(save_location=None, config_location=None, num_loop_workers=1):
     ts = time.time()
     work_path = get_lib_path()
     work_path = str(work_path) + "/analysis_scripts/softening_acid_ro/data_generation"
