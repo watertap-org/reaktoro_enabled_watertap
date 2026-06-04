@@ -19,7 +19,7 @@ from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 __author__ = "Alexander V. Dudchenko"
 
 
-def main(save_location=None, config_location=None):
+def main(save_location=None, config_location=None, num_loop_workers=1):
 
     ts = time.time()
     work_path = get_lib_path()
@@ -37,7 +37,7 @@ def main(save_location=None, config_location=None):
         probe_function=sar.test_func,
         saving_dir=save_location,
         number_of_subprocesses=1,
-        num_loop_workers=1,
+        num_loop_workers=num_loop_workers,
     )
 
     print("Total time: ", time.time() - ts)
