@@ -18,9 +18,6 @@ from pyomo.environ import (
 )
 from watertap.costing import WaterTAPCosting
 
-# from brackish_valorization_reaktoro.property_models.tests.test_mcas_with_enthalpy import (
-#     build_case,
-# )
 from reaktoro_enabled_watertap.unit_models.tests.test_multi_comp_feed_product import (
     build_case,
 )
