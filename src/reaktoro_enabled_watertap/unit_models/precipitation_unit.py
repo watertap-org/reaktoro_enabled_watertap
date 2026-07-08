@@ -14,7 +14,7 @@ from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
-    ViablePrecipitantsBase,
+    ViablePrecipitants,
     ViableReagents,
     ReaktoroOptionsContainer,
 )
@@ -42,33 +42,7 @@ from reaktoro_enabled_watertap.utils import scale_utils as scu
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from collections import OrderedDict
 
-
 __author__ = "Alexander V. Dudchenko"
-
-
-class ViablePrecipitants(ViablePrecipitantsBase):
-    def __init__(self):
-        self.register_solid(
-            "Calcite",
-            100.09 * pyunits.g / pyunits.mol,
-            {"Ca_2+": 1, "HCO3_-": 1},
-            "Ca_2+",
-            reaktoro_modifier={"Ca": -1, "C": -1, "O": -3},
-        )
-        self.register_solid(
-            "Gypsum",
-            172.17 * pyunits.g / pyunits.mol,
-            {"Ca_2+": 1, "SO4_2-": 1},
-            "Ca_2+",
-            reaktoro_modifier={"Ca": -1, "S": -1, "O": -4},
-        )
-        self.register_solid(
-            "Brucite",
-            58.3197 * pyunits.g / pyunits.mol,
-            {"Mg_2+": 1, "H2O": 2},
-            "Mg_2+",
-            reaktoro_modifier={"Mg": -1, "O": -2, "H": -2},
-        )
 
 
 @declare_process_block_class("PrecipitationUnit")

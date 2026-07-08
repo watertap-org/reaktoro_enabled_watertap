@@ -13,10 +13,10 @@
 import pytest
 from reaktoro_enabled_watertap.unit_models.precipitation_unit import (
     PrecipitationUnit,
-    ViablePrecipitants,
 )
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ViableReagents,
+    ViablePrecipitants,
 )
 
 from reaktoro_enabled_watertap.unit_models.tests.test_multi_comp_feed_product import (
