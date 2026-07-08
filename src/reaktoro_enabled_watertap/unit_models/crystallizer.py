@@ -46,11 +46,10 @@ from reaktoro_enabled_watertap.utils.reaktoro_utils import (
 __author__ = "Alexander V. Dudchenko"
 
 
-
 def get_default_viable_precipitants():
-    '''
+    """
     Returns the default set of viable precipitants for the crystallization unit.
-    '''
+    """
     viable_precipitants = ViablePrecipitants()
     viable_precipitants.register_solid(
         "Anhydrite",
