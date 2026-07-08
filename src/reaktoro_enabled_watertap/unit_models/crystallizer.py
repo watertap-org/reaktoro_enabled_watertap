@@ -39,79 +39,62 @@ from reaktoro_enabled_watertap.utils import scale_utils as scu
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from collections import OrderedDict
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
-    ViablePrecipitantsBase,
+    ViablePrecipitants,
     ReaktoroOptionsContainer,
 )
 
 __author__ = "Alexander V. Dudchenko"
 
 
-class ViablePrecipitants(ViablePrecipitantsBase):
-    def __init__(self):
-        self.register_solid(
-            "Calcite",
-            100.09 * pyunits.g / pyunits.mol,
-            {"Ca_2+": 1, "HCO3_-": 1},
-            "Ca_2+",
-            reaktoro_modifier={"Ca": -1, "C": -1, "O": -3},
-        )
-        self.register_solid(
-            "Gypsum",
-            172.17 * pyunits.g / pyunits.mol,
-            {"Ca_2+": 1, "SO4_2-": 1},
-            "Ca_2+",
-            reaktoro_modifier={"Ca": -1, "S": -1, "O": -4},
-        )
-        self.register_solid(
-            "Anhydrite",
-            172.17 * pyunits.g / pyunits.mol,
-            {"Ca_2+": 1, "SO4_2-": 1},
-            "Ca_2+",
-            reaktoro_modifier={"Ca": -1, "S": -1, "O": -4},
-        )
-        self.register_solid(
-            "Brucite",
-            58.3197 * pyunits.g / pyunits.mol,
-            {"Mg_2+": 1, "H2O": 2},
-            "Mg_2+",
-            reaktoro_modifier={"Mg": -1, "O": -2, "H": -2},
-        )
-        self.register_solid(
-            "Halite",
-            58.3197 * pyunits.g / pyunits.mol,
-            {"Na_+": 1, "Cl_-": 1},
-            "Na_+",
-            reaktoro_modifier={"Na": -1, "Cl": -1},
-        )
 
-        self.register_solid(
-            "Mirabilite",
-            322.9 * pyunits.g / pyunits.mol,
-            {"Na_+": 2, "SO4_2-": 2, "H2O": 10},
-            "Na_+",
-            reaktoro_modifier={"Na": -2, "SO4_2": -2, "H2O": -10},
-        )
-        self.register_solid(
-            "Sylvite",
-            74.55 * pyunits.g / pyunits.mol,
-            {"K_+": 1, "Cl_-": 1},
-            "K_+",
-            reaktoro_modifier={"K": -1, "Cl": -1},
-        )
-        self.register_solid(
-            "Bischofite",
-            203.30 * pyunits.g / pyunits.mol,
-            {"Mg_2+": 1, "Cl_-": 2, "H2O": 6},
-            "Mg_2+",
-            reaktoro_modifier={"Mg": -1, "Cl": -2, "H2O": -6},
-        )
-        self.register_solid(
-            "Epsomite",
-            246.48 * pyunits.g / pyunits.mol,
-            {"Mg_2+": 1, "SO4_2-": 1, "H2O": 7},
-            "Mg_2+",
-            reaktoro_modifier={"Mg": -1, "SO4_2": -1, "H2O": -7},
-        )
+def get_default_viable_precipitants():
+    '''
+    Returns the default set of viable precipitants for the crystallization unit.
+    '''
+    viable_precipitants = ViablePrecipitants()
+    viable_precipitants.register_solid(
+        "Anhydrite",
+        172.17 * pyunits.g / pyunits.mol,
+        {"Ca_2+": 1, "SO4_2-": 1},
+        "Ca_2+",
+        reaktoro_modifier={"Ca": -1, "S": -1, "O": -4},
+    )
+    viable_precipitants.register_solid(
+        "Halite",
+        58.3197 * pyunits.g / pyunits.mol,
+        {"Na_+": 1, "Cl_-": 1},
+        "Na_+",
+        reaktoro_modifier={"Na": -1, "Cl": -1},
+    )
+    viable_precipitants.register_solid(
+        "Mirabilite",
+        322.9 * pyunits.g / pyunits.mol,
+        {"Na_+": 2, "SO4_2-": 2, "H2O": 10},
+        "Na_+",
+        reaktoro_modifier={"Na": -2, "SO4_2": -2, "H2O": -10},
+    )
+    viable_precipitants.register_solid(
+        "Sylvite",
+        74.55 * pyunits.g / pyunits.mol,
+        {"K_+": 1, "Cl_-": 1},
+        "K_+",
+        reaktoro_modifier={"K": -1, "Cl": -1},
+    )
+    viable_precipitants.register_solid(
+        "Bischofite",
+        203.30 * pyunits.g / pyunits.mol,
+        {"Mg_2+": 1, "Cl_-": 2, "H2O": 6},
+        "Mg_2+",
+        reaktoro_modifier={"Mg": -1, "Cl": -2, "H2O": -6},
+    )
+    viable_precipitants.register_solid(
+        "Epsomite",
+        246.48 * pyunits.g / pyunits.mol,
+        {"Mg_2+": 1, "SO4_2-": 1, "H2O": 7},
+        "Mg_2+",
+        reaktoro_modifier={"Mg": -1, "SO4_2": -1, "H2O": -7},
+    )
+    return viable_precipitants
 
 
 @declare_process_block_class("CrystallizationUnit")
@@ -207,7 +190,7 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
     def build(self):
         super().build()
         if self.config.viable_precipitants is None:
-            self.config.viable_precipitants = ViablePrecipitants()
+            self.config.viable_precipitants = get_default_viable_precipitants()
         self.selected_precipitants = {
             key: self.config.viable_precipitants[key]
             for key in self.config.selected_precipitants
