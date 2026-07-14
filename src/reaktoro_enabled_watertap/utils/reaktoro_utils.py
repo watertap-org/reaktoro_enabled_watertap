@@ -246,10 +246,10 @@ class ViablePrecipitantsBase(dict):
         reaktoro_modifier=None,
     ):
         """
-        Add a new reagent to default list:
+        Add a new precipitant to default list:
 
         Args:
-            reagent - name of reagent
+            precipitant - name of reagent
             mw - molecular weight of reagent (include pyomo units)
             precipitation_stoichiometric - dictionary that contains what species form the solid {'ion':moles}
             primary_ion - a primary ion that forms the solid, will be used to "scale" the ion (e.g. CaSO4 will have primary ion Ca_2+)
@@ -262,6 +262,31 @@ class ViablePrecipitantsBase(dict):
             "primary_ion": primary_ion,
             "reaktoro_modifier": reaktoro_modifier,
         }
+
+
+class ViablePrecipitants(ViablePrecipitantsBase):
+    def __init__(self):
+        self.register_solid(
+            "Calcite",
+            100.09 * pyunits.g / pyunits.mol,
+            {"Ca_2+": 1, "HCO3_-": 1},
+            "Ca_2+",
+            reaktoro_modifier={"Ca": -1, "C": -1, "O": -3},
+        )
+        self.register_solid(
+            "Gypsum",
+            172.17 * pyunits.g / pyunits.mol,
+            {"Ca_2+": 1, "SO4_2-": 1},
+            "Ca_2+",
+            reaktoro_modifier={"Ca": -1, "S": -1, "O": -4},
+        )
+        self.register_solid(
+            "Brucite",
+            58.3197 * pyunits.g / pyunits.mol,
+            {"Mg_2+": 1, "H2O": 2},
+            "Mg_2+",
+            reaktoro_modifier={"Mg": -1, "O": -2, "H": -2},
+        )
 
 
 class ReaktoroOptionsContainer(dict):
