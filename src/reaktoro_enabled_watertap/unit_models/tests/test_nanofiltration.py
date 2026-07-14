@@ -31,8 +31,6 @@ from pyomo.environ import (
 from reaktoro_enabled_watertap.unit_models.tests.test_multi_comp_feed_product import (
     build_case,
 )
-
-from watertap.core.util.model_diagnostics.infeasible import *
 from idaes.core.util.model_statistics import large_residuals_set
 from idaes.core.util.model_diagnostics import DiagnosticsToolbox
 
@@ -138,10 +136,6 @@ def test_nanofiltration_with_reaktoro():
     m.fs.NF.report()
 
     # Diagnostics
-    print("------vars_close_to_bound---------")
-    print_variables_close_to_bounds(m)
-    print("------constraints_close_to_bound---------")
-    print_constraints_close_to_bounds(m)
     for lr in large_residuals_set(m, tol=1e-8, return_residual_values=True):
         print(lr)
     for i in iscale.list_unscaled_variables(m):
