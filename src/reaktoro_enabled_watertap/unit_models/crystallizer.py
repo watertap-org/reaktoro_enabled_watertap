@@ -201,7 +201,9 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
             solids_ions_dict={
                 key: {
                     "mw": item["mw"],
-                    "precipitation_stoichiometric": item["precipitation_stoichiometric"],
+                    "precipitation_stoichiometric": item[
+                        "precipitation_stoichiometric"
+                    ],
                 }
                 for key, item in self.selected_precipitants.items()
             },
@@ -544,9 +546,7 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
             )
             self.crystallizer.flow_mol_precipitate[phase].fix(flow)
             self.crystallizer.flow_mass_sol_comp_apparent[phase].unfix()
-        self.crystallizer.initialize(
-            state_args=self._build_crystallizer_state_args()
-        )
+        self.crystallizer.initialize(state_args=self._build_crystallizer_state_args())
         if self.config.add_reaktoro_chemistry:
             self.precipitation_block.initialize()
             self.precipitation_block.display_jacobian_scaling()
