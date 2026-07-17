@@ -31,7 +31,7 @@ from idaes.core import (
 from idaes.core import UnitModelCostingBlock
 import idaes.core.util.scaling as iscale
 
-from reaktoro_enabled_watertap.unit_models.surrogate_crystallizer import (
+from watertap.unit_models.surrogate_crystallizer import (
     SurrogateCrystallizer,
 )
 from reaktoro_enabled_watertap.utils import scale_utils as scu
@@ -199,7 +199,10 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
             property_package=self.config.default_property_package,
             vapor_property_package=self.config.vapor_property_package,
             solids_ions_dict={
-                key: item["precipitation_stoichiometric"]
+                key: {
+                    "mw": item["mw"],
+                    "precipitation_stoichiometric": item["precipitation_stoichiometric"],
+                }
                 for key, item in self.selected_precipitants.items()
             },
         )
@@ -511,6 +514,25 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
             if self.config.track_pE:
                 iscale.constraint_scaling_transform(self.eq_outlet_pE, 1)
 
+    def _build_crystallizer_state_args(self):
+        t0 = self.crystallizer.flowsheet().config.time.first()
+        state_block = self.crystallizer.properties_in[t0]
+        state_dict = state_block.define_port_members()
+
+        state_args = {}
+        for k in state_dict.keys():
+            if state_dict[k].is_indexed():
+                state_args[k] = {
+                    idx: state_dict[k][idx].value for idx in state_dict[k].keys()
+                }
+            else:
+                state_args[k] = state_dict[k].value
+
+        state_args["flow_mass_phase_comp"] = {
+            ("Liq", "H2O"): value(state_block.flow_mass_phase_comp["Liq", "H2O"])
+        }
+        return state_args
+
     def initialize_unit(self, **kwargs):
         for phase, data in self.selected_precipitants.items():
             # assume that only fraction of ions will actually precipitate
@@ -522,11 +544,15 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
             )
             self.crystallizer.flow_mol_precipitate[phase].fix(flow)
             self.crystallizer.flow_mass_sol_comp_apparent[phase].unfix()
-        self.crystallizer.initialize()
+        self.crystallizer.initialize(
+            state_args=self._build_crystallizer_state_args()
+        )
         if self.config.add_reaktoro_chemistry:
             self.precipitation_block.initialize()
             self.precipitation_block.display_jacobian_scaling()
-            self.crystallizer.initialize()
+            self.crystallizer.initialize(
+                state_args=self._build_crystallizer_state_args()
+            )
             for phase, data in self.selected_precipitants.items():
                 self.crystallizer.flow_mol_precipitate[phase].unfix()
                 self.crystallizer.flow_mass_sol_comp_apparent[phase].unfix()
@@ -585,7 +611,6 @@ class CrystallizationUnitData(WaterTapFlowsheetBlockData):
             "Treated state": treated_state,
             "Operation": {
                 "Heater work": self.crystallizer.heat_required,
-                "Heat duty": pyunits.convert(self.crystallizer.heat_duty, pyunits.kW),
                 "Evaporation %": self.crystallizer.evaporation_percent,
                 "Operating temperature": self.crystallizer.temperature_operating,
                 "Operating pressure": self.crystallizer.pressure_operating,
