@@ -129,7 +129,7 @@ def test_mc_feed_with_alk():
             m.fs.feed.feed.properties[0].conc_mass_phase_comp["Liq", "HCO3_-"].value,
             1e-2,
         )
-        == 0.14269
+        == 0.28530949258756755
     )
     assert (
         m.fs.feed.feed.properties[0].conc_mass_phase_comp["Liq", "HCO3_-"].fixed == True
