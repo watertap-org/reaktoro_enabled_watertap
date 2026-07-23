@@ -473,12 +473,16 @@ def fix_and_scale(m):
     # stability - in all example waters, pH in softening does not really operate
     # above 11, but ability of softening unit to go above 11 can cuase instability
     # Additonally, when alkalinitry drops bellow <10 ppm we observe poor solvablity and in practice
-    # softening does not reduce alkalinity to below 20 ppm, as such
-    # we constrain it to 20 ppm
+    # softening does not reduce alkalinity to below 10 ppm, as such
+    # we constrain it to 10 ppm
     # (per veolia https://www.watertechnologies.com/handbook/chapter-07-precipitation-softening)
+
+    # NOTE: Original reaktoro paper used a high bound of 20 ppm, as reaktoro-pse used
+    # incorrect alkalintiy estimate resulting in it being 2x actual,
+    # thus we reduce lower bound here 10 ppm to repduce paper cost results.
     max_ph = 11
     iscale.calculate_scaling_factors(m)
-    m.fs.softening_unit.precipitation_reactor.alkalinity.setlb(20)
+    m.fs.softening_unit.precipitation_reactor.alkalinity.setlb(10)
     m.fs.ro_unit.ro_feed.pH.setlb(6)
     m.fs.ro_unit.ro_feed.pH.setub(max_ph)
     if m.fs.find_component("hp_pump_unit") is not None:
