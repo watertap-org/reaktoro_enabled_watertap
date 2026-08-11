@@ -203,6 +203,15 @@ class ViableReagents(ViableReagentsBase):
             cost=0.19,
         )
         self.register_reagent(
+            "NaOH",
+            40.00 * pyunits.g / pyunits.mol,
+            {"Na_+": 1, "H2O": 1},
+            min_dose=0.01,
+            max_dose=3000,
+            purity=1,
+            cost=0.19,
+        )
+        self.register_reagent(
             "CaO",
             56.0774 * pyunits.g / pyunits.mol,
             {"Ca_2+": 1, "H2O": 1},
