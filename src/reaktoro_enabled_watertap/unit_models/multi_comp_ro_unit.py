@@ -181,6 +181,16 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         ),
     )
     CONFIG.declare(
+        "target_water_flux",
+        ConfigValue(
+            default=15,
+            description="Target water flux for RO stage during initialization",
+            doc="""
+            Sets a water flux for RO stage during initialization
+            """,
+        ),
+    )
+    CONFIG.declare(
         "target_recovery",
         ConfigValue(
             default=0.25,
@@ -737,7 +747,12 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
                 self.config.target_recovery
                 - self.ro_unit.recovery_vol_phase[0.0, "Liq"]
             )
-            ** 2,
+            ** 2
+            + (
+                self.config.target_water_flux
+                - 3600 * self.ro_unit.flux_mass_phase_comp_avg[0.0, "Liq", "H2O"]
+            )
+            ** 2  # roughly LMH),
         )
         self.ro_unit.recovery_objective.deactivate()
 
