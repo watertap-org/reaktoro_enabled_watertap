@@ -8,3 +8,5 @@
 *.egg-info/
 *.egg
 *.pytest_cache/
+# local RO initialization benchmark
+src/reaktoro_enabled_watertap/flowsheets/ro_init_benchmark/

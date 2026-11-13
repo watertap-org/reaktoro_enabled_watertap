@@ -13,11 +13,7 @@
 from reaktoro_enabled_watertap.utils.watertap_flowsheet_block import (
     WaterTapFlowsheetBlockData,
 )
-from idaes.core.util.initialization import (
-    propagate_state,
-    fix_state_vars,
-    revert_state_vars,
-)
+from idaes.core.util.initialization import propagate_state
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ReaktoroOptionsContainer,
 )
@@ -56,6 +52,7 @@ from idaes.core import UnitModelCostingBlock
 
 import idaes.core.util.scaling as iscale
 from reaktoro_enabled_watertap.utils import scale_utils as scu
+from reaktoro_enabled_watertap.utils.translator_utils import init_translator_block
 
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 
@@ -1111,22 +1108,6 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
                     ],
                 )
 
-    def init_translator_block(self, block, additonal_var_to_fix=None):
-        """initializes translator block"""
-        if additonal_var_to_fix is not None:
-            if not isinstance(additonal_var_to_fix, list):
-                additonal_var_to_fix = [additonal_var_to_fix]
-            for var in additonal_var_to_fix:
-                var.fix()
-        flags = fix_state_vars(block.properties_in)
-        solver = get_solver()
-        results = solver.solve(block, tee=False)
-        assert_optimal_termination(results)
-        revert_state_vars(block.properties_in, flags)
-        if additonal_var_to_fix is not None:
-            for var in additonal_var_to_fix:
-                var.unfix()
-
     def guess_hx_operation(self, initialzied_inlet, guessed_inlet, deltaT_guess):
         """provides an initial guess for heat exchanger operation based on inlet conditions and a delta T guess"""
 
@@ -1164,7 +1145,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
 
     def initialize_unit(self):
         if self.config.mvc_property_package is not None:
-            self.init_translator_block(self.feed_translator)
+            init_translator_block(self.feed_translator)
             propagate_state(self.feed_to_pump)
         self.pump_feed.initialize()
         propagate_state(self.pump_to_splitter)
@@ -1195,7 +1176,7 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
             propagate_state(self.compressor_to_condenser)
             self.condenser.initialize(heat=-self.evaporator.heat_transfer.value)
             propagate_state(self.condenser_to_tb_distillate)
-            self.init_translator_block(self.tb_distillate)
+            init_translator_block(self.tb_distillate)
             # self.tb_distillate.initialize()
             propagate_state(self.tb_distillate_to_pump)
             self.pump_distillate.initialize()
@@ -1212,8 +1193,8 @@ class MultiCompMVCData(WaterTapFlowsheetBlockData):
                 inlet_props.append(self.pH["feed"])
             propagate_state(self.distillate_hx_to_distillate)
             propagate_state(self.brine_hx_to_brine)
-            self.init_translator_block(self.brine_translator, inlet_props)
-            self.init_translator_block(
+            init_translator_block(self.brine_translator, inlet_props)
+            init_translator_block(
                 self.distillate_translator,
                 self.feed_translator.properties_in[0].flow_mol_phase_comp,
             )
