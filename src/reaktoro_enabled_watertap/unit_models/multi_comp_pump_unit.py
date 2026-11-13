@@ -60,7 +60,7 @@ class MultiCompPumpUnitData(WaterTapFlowsheetBlockData):
     CONFIG.declare(
         "osmotic_pressure_offset",
         ConfigValue(
-            default=2e5 * pyunits.Pa,
+            default=15e5 * pyunits.Pa,
             description="Offset for osmotic pressure ",
             doc="""
             Sets an fixed offset of guessed initial pressure

@@ -26,11 +26,7 @@ from idaes.core.util.initialization import propagate_state
 from reaktoro_enabled_watertap.utils.reaktoro_utils import (
     ReaktoroOptionsContainer,
 )
-from watertap.core.solvers import get_solver
 from idaes.core.util.model_statistics import degrees_of_freedom
-from pyomo.environ import (
-    assert_optimal_termination,
-)
 from pyomo.environ import (
     Var,
     value,
@@ -52,11 +48,11 @@ from idaes.core import (
 from idaes.core import UnitModelCostingBlock
 
 import idaes.core.util.scaling as iscale
-from idaes.core.util.initialization import fix_state_vars, revert_state_vars
 from idaes.models.unit_models import (
     Translator,
 )
 from reaktoro_enabled_watertap.utils import scale_utils as scu
+from reaktoro_enabled_watertap.utils.translator_utils import init_translator_block
 
 from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from pyomo.network import Arc
@@ -177,6 +173,16 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             description="if pE should be tracked in the model",
             doc="""
                     Providing True will add pE variable to the model and track it
+            """,
+        ),
+    )
+    CONFIG.declare(
+        "target_water_flux",
+        ConfigValue(
+            default=15,
+            description="Target water flux for RO stage during initialization",
+            doc="""
+            Sets a water flux for RO stage during initialization
             """,
         ),
     )
@@ -737,7 +743,12 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
                 self.config.target_recovery
                 - self.ro_unit.recovery_vol_phase[0.0, "Liq"]
             )
-            ** 2,
+            ** 2
+            + (
+                self.config.target_water_flux
+                - 3600 * self.ro_unit.flux_mass_phase_comp_avg[0.0, "Liq", "H2O"]
+            )
+            ** 2  # roughly LMH),
         )
         self.ro_unit.recovery_objective.deactivate()
 
@@ -963,22 +974,6 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         scale_factors[self.ro_solute_type] = tds_sf
         return scale_factors
 
-    def init_translator_block(self, block, additonal_var_to_fix=None):
-        """initializes translator block"""
-        if additonal_var_to_fix is not None:
-            if not isinstance(additonal_var_to_fix, list):
-                additonal_var_to_fix = [additonal_var_to_fix]
-            for var in additonal_var_to_fix:
-                var.fix()
-        flags = fix_state_vars(block.properties_in)
-        solver = get_solver()
-        results = solver.solve(block, tee=False)
-        assert_optimal_termination(results)
-        revert_state_vars(block.properties_in, flags)
-        if additonal_var_to_fix is not None:
-            for var in additonal_var_to_fix:
-                var.unfix()
-
     def init_ro_unit(self, ro_unit):
         ro_unit.area.unfix()
         ro_unit.feed_side.velocity[0, 0].unfix()
@@ -994,7 +989,7 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         ro_unit.recovery_objective.deactivate()
 
     def initialize_unit(self):
-        self.init_translator_block(self.ro_feed)
+        init_translator_block(self.ro_feed)
 
         if self.config.add_feed_pump:
             propagate_state(self.feed_to_pump)
@@ -1011,11 +1006,11 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
         self.ro_feed.properties_in[
             0
         ].flow_mol_phase_comp.fix()  # need to fix for initialization
-        self.init_translator_block(
+        init_translator_block(
             self.ro_retentate,
             [self.ro_feed.properties_in[0].flow_mol_phase_comp, self.ro_feed.pH],
         )
-        self.init_translator_block(
+        init_translator_block(
             self.ro_product,
             [
                 self.ro_feed.properties_in[0].flow_mol_phase_comp,
