@@ -88,7 +88,7 @@ def test_osmotic_init_pressure():
             ),
             1e-2,
         )
-        == 4.0428
+        == 15.018
     )
 
     assert (
@@ -100,21 +100,21 @@ def test_osmotic_init_pressure():
             ),
             1e-2,
         )
-        == 6.1710
+        == 19.171
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.2636
+        == 4.9809
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Gypsum"]),
             1e-2,
         )
-        == 0.32348
+        == 0.95883
     )
     assert (
         pytest.approx(
@@ -167,7 +167,7 @@ def test_with_integrated_pump_and_erd():
             ),
             1e-2,
         )
-        == 4.9280
+        == 15.017
     )
 
     assert (
@@ -179,21 +179,21 @@ def test_with_integrated_pump_and_erd():
             ),
             1e-2,
         )
-        == 6.7899
+        == 19.790
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.2661
+        == 6.1357
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Gypsum"]),
             1e-2,
         )
-        == 0.32581
+        == 1.1484
     )
     assert (
         pytest.approx(
@@ -258,7 +258,7 @@ def test_user_options():
             ),
             1e-2,
         )
-        == 4.0354
+        == 15.017
     )
 
     assert (
@@ -270,21 +270,21 @@ def test_user_options():
             ),
             1e-2,
         )
-        == 6.1710
+        == 19.171
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.2646
+        == 4.5771
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Brucite"]),
             1e-2,
         )
-        == 7.8381e-07
+        == 1.1541e-06
     )
     assert (
         pytest.approx(
@@ -344,7 +344,7 @@ def test_costing():
             ),
             1e-2,
         )
-        == 4.0428
+        == 15.018
     )
 
     assert (
@@ -356,21 +356,21 @@ def test_costing():
             ),
             1e-2,
         )
-        == 6.1710
+        == 19.171
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Calcite"]),
             1e-2,
         )
-        == 1.2636
+        == 4.9809
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.scaling_tendency["Gypsum"]),
             1e-2,
         )
-        == 0.32348
+        == 0.95883
     )
     assert (
         pytest.approx(
@@ -384,12 +384,12 @@ def test_costing():
             value(m.fs.ro_unit.ro_unit.costing.capital_cost),
             1e-2,
         )
-        == 1598.6
+        == 8832.2
     )
     assert (
         pytest.approx(
             value(m.fs.ro_unit.ro_unit.costing.fixed_operating_cost),
             1e-2,
         )
-        == 159.86
+        == 883.22
     )

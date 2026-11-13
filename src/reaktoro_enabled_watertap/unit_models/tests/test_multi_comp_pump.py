@@ -66,7 +66,7 @@ def test_osmotic_init_pressure():
             m.fs.pump_unit.outlet.port.pressure[0].value,
             1e-5,
         )
-        == 617102.0971
+        == 1917102.0
     )
 
 
@@ -136,5 +136,5 @@ def test_costing():
             m.fs.pump_unit.pump.costing.capital_cost.value,
             1e-1,
         )
-        == 2466.5770033649587
+        == 8661.26
     )

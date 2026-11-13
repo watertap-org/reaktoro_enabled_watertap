@@ -53,6 +53,8 @@ from idaes.core import UnitModelCostingBlock
 
 import idaes.core.util.scaling as iscale
 from idaes.core.util.initialization import fix_state_vars, revert_state_vars
+from pyomo.core.expr.visitor import identify_variables
+from pyomo.util.calc_var_value import calculate_variable_from_constraint
 from idaes.models.unit_models import (
     Translator,
 )
@@ -986,8 +988,18 @@ class MultiCompROUnitData(WaterTapFlowsheetBlockData):
             for var in additonal_var_to_fix:
                 var.fix()
         flags = fix_state_vars(block.properties_in)
+        # Translator equations are explicit mappings from inlet to outlet, so
+        # compute outlet state directly to give solver a near-converged start point
+        block.properties_in.initialize()
+        for con in block.component_data_objects(
+            Constraint, active=True, descend_into=False
+        ):
+            free_vars = [v for v in identify_variables(con.body) if not v.fixed]
+            if len(free_vars) == 1:
+                calculate_variable_from_constraint(free_vars[0], con)
+        block.properties_out.initialize()
         solver = get_solver()
-        results = solver.solve(block, tee=False)
+        results = solver.solve(block)
         assert_optimal_termination(results)
         revert_state_vars(block.properties_in, flags)
         if additonal_var_to_fix is not None:

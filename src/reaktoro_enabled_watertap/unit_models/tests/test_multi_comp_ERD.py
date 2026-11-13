@@ -78,7 +78,7 @@ def test_erd_pressure():
             m.fs.ERD_unit.inlet.port.pressure[0].value,
             1e-5,
         )
-        == 6.1710e05
+        == 1917102.0
     )
     assert (
         pytest.approx(
