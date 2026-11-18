@@ -826,6 +826,7 @@ class PrecipitationUnitData(WaterTapFlowsheetBlockData):
             "Inlet state": get_ion_comp(
                 self.precipitation_reactor.dissolution_reactor.properties_in[0],
                 self.precipitation_reactor.pH["inlet"],
+                get_pe("inlet"),
             ),
             "Chemical dosing:": self.precipitation_reactor.reagent_dose,
             "Chemical mass flow:": self.precipitation_reactor.flow_mass_reagent,

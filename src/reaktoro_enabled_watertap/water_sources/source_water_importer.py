@@ -19,7 +19,7 @@ from reaktoro_enabled_watertap.utils.report_util import get_lib_path
 __author__ = "Alexander V. Dudchenko"
 
 
-def get_source_water_data(water_source, file_location=None):
+def get_source_water_data(water_source=None, file_location=None):
     """simple function to load feed water compostion from yaml file"""
     if file_location is None:
         file_location = get_lib_path() / "water_sources" / water_source
@@ -32,7 +32,7 @@ def get_source_water_data(water_source, file_location=None):
     mcas_param_dict["mw_data"] = gen_mw_dict(data_dict)
     mcas_param_dict["stokes_radius_data"] = gen_stoke_dict(data_dict)
     mcas_param_dict["charge"] = gen_charge_dict(data_dict)
-
+    pE = data_dict.get("pE", None)
     # Creats dict with feed properties to pass into multi_comp_feed
     mass_comp_dict = get_feed_comp(data_dict)
     pH = float(data_dict["pH"])
@@ -44,6 +44,7 @@ def get_source_water_data(water_source, file_location=None):
     feed_spec_dict = {
         "ion_concentrations": mass_comp_dict,
         "pH": pH,
+        "pE": pE,
         "temperature": feed_temperature,
         "alkalinity_as_CaCO3": alkalinity,
     }
